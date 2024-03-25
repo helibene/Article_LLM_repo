@@ -254,9 +254,9 @@ def getRenderLists(experimental=True,basic=True,test=False) :
                     "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":30,"opacity":0.85}
 
     
-    _2d_embd_exp = {"x":0,"y":1,'c':"year_month","animation_frame":"bool_sent_all"}
+    _2d_embd_exp = {"x":0,"y":1,'c':"year_month","animation_frame":"bool_sent_all","title":"test_bool_sent_all","browser":True}
               
-    _3d_embd_exp = {"x":0,"y":1,"z":2,'c':"year_month","animation_frame":"bool_sent_all"}
+    _3d_embd_exp = {"x":0,"y":1,"z":2,'c':"year_month","animation_frame":"bool_sent_all","title":"test_bool_sent_all","browser":True}
     _2dList_exp = [_2d_embd_exp]
     _3dList_exp = [_3d_embd_exp]
     

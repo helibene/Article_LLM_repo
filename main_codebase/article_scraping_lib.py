@@ -5,21 +5,16 @@ Created on Thu Mar 21 19:14:15 2024
 @author: Alexandre
 """
 import main_var
-env = "test/"
-mv = main_var.main_var(env=env)
+mv = main_var.main_var()
 from pygooglenews import GoogleNews
-import json
 import pandas as pd
-from pandas import *
 from dateparser import parse as parse_date
-from datetime import date, datetime, timedelta
 import matplotlib.pyplot as plt
-from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,deleteUnnamed
-import utils
+from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,deleteUnnamed,display_df
 import hashlib
 import os
-import test
 import embedding_keyword_module_lib as ekml
+from datetime import timedelta
 pd.set_option('expand_frame_repr', False)
 
 
@@ -126,7 +121,7 @@ def fullWorkflow(gn, df, search = False, topic_sel=1, date1 = '2015-01-01', date
 def getStandardDf(col_list=[]):
     return pd.DataFrame([], columns = col_list) 
 
-def addToDFHeadlinesParamList(gn, topic_list=[0], date_list_1 = ['2015-01-01'], date_list_2 = ['2016-01-01'], display=True,save=True,iteration=-1):
+def addToDFHeadlinesParamList(gn, topic_list=[0], date_list_1 = ['2015-01-01'], date_list_2 = ['2016-01-01'], display=True,save=True,iteration=-1,use_date=True):
     if iteration != -1:
         iteration_str = str(iteration)
     else :
@@ -138,14 +133,15 @@ def addToDFHeadlinesParamList(gn, topic_list=[0], date_list_1 = ['2015-01-01'], 
     for j in range(date_list_len) :
         ar_count = 0
         for i in topic_list :
-            df_out, ar_num = fullWorkflow(gn, df_out, False , i, date_list_1[j], date_list_2[j])
+            df_out, ar_num = fullWorkflow(gn, df_out, use_date , i, date_list_1[j], date_list_2[j])
             ar_count = ar_count + ar_num
         if display :
             log("     - Sample num "+str(j+1)+" done ("+str(ar_count)+" articles found)")
     if save :
         if display :
             log(" - Saving result table : '"+str(main_path)+str(filename)+"_"+iteration_str+".csv'")
-        df_out = df_out.set_index('hash_key')
+        # df_out = deleteUnnamed(df_out,"hash_key")
+        # df_out = df_out.set_index('hash_key')
         saveDFcsv(df_out, main_path, filename+"_"+iteration_str,False)
     if display :
         logEndWorkflow(df_out.shape[0], expected_article)
@@ -166,7 +162,8 @@ def loop_scraping(number_topics=8, startDate='2010-01-01', endDate='2024-01-01',
     logEndWorkflow(total_article_count, expected_article*sampling_2,True)
     if save_final :
         # saveDFcsv(df_out, main_path, filename+"_final",False)
-        df_out = df_out.set_index('hash_key')
+        # df_out = df_out.set_index('hash_key')
+        df_out = deleteUnnamed(df_out,"hash_key")
         saveDFcsv(df_out, main_path, filename,False)
         print("Final file saved here :",main_path)
     return df_out
@@ -176,17 +173,17 @@ def logStartWorkflow(topic_list,date_list_1,date_list_2,loop_module=False):
     min_date = parse_date(date_list_1[0])
     max_date = parse_date(date_list_2[-1])
     total_period = (max_date-min_date).days
-    sampling_period = total_period/len(date_list_1)
+    sampling_period = calculateRatio(total_period,len(date_list_1))
     expected_article = 100*len(topic_list)*len(date_list_1)
-    articles_per_day = expected_article/total_period
+    articles_per_day = calculateRatio(expected_article,total_period)
     if loop_module :
         log("   -===-   -===-   Loop Scrapping module start   -===-   -===-   ")
     else :
         log("   -===-   Scrapping module start   -===-   ")
     log(" - List of topics : '"+str(topic_list)+"'  ("+str(len(topic_list))+")")
     log(" - From '"+str(min_date)+"'' to '"+str(max_date)+"' ("+str(total_period)+" days)")
-    log(" - Sampling this numebr of periods : '"+str(len(date_list_1))+"'  ("+str(sampling_period)+" days)")
-    log(" - Expected articles found : '"+str(expected_article)+"''  ("+str(articles_per_day)+"/day)")
+    log(" - Sampling this numebr of periods : '"+str(len(date_list_1))+"'  ("+sampling_period+" days)")
+    log(" - Expected articles found : '"+str(expected_article)+"''  ("+articles_per_day+"/day)")
     if loop_module :
         log("")
         log("")
@@ -196,7 +193,7 @@ def logEndWorkflow(found_articles, expected_article,loop_module=False) :
     if loop_module :
         log("")
         log("")
-    log(" - Total of '"+str(found_articles)+"' articles found ("+str(round(100*found_articles/expected_article,2))+"% of expected) !")
+    log(" - Total of '"+str(found_articles)+"' articles found ("+calculatePct(found_articles,expected_article)+"% of expected) !")
     if loop_module :
         log("   -===-   -===-   Loop Scrapping module end   -===-   -===-   ")
     else :
@@ -210,7 +207,7 @@ def displayStats(df,shape=True,schema=True,preview=False,mostCommon=1) :
     if schema :
         print("Column type : ",df.dtypes)
     if preview :
-        display(df.head(1))
+        display_df(df.head(1))
     if mostCommon>0 :
         print("\n")
         print("\n   ------   Most common sources   ------   \n")
@@ -360,6 +357,7 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
     df_category = df['category'].value_counts().to_frame("count").sort_values(by=['count'],ascending=True)
     
     df_source = df['source_title'].value_counts().to_frame("count").sort_values(by=['count'],ascending=True)
+    source_limit = min(source_limit,len(df_source))
     source_limiy_count = int(df_source.iloc[[int(-source_limit)]]["count"].tolist()[0])
     df_source = df_source[df_source['count'].between(source_limiy_count, 1000000)]
 
@@ -376,76 +374,46 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
 
 def joinQuerryAndParse(save=True,remove_invalid=True,display=True,filtered_input_df=False) :
     # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"tb.sentences","tb.noun_phrases":"tb.noun_phrases","tb.words":"tb.words","tb.polarity":"tb.polarity","tb.subjectivity":"tb.subjectivity","tb.p_pos":"tb.p_pos","tb.p_neg":"tb.p_neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.compound","valid":"valid","link_q":"link","pk_q":"pk",}
-    rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"sentences","tb.noun_phrases":"noun_phrases","tb.words":"words","tb.polarity":"polarity","tb.subjectivity":"subjectivity","tb.p_pos":"pos2","tb.p_neg":"neg2","vs.neg":"neg1","vs.neu":"neu1","vs.pos":"pos1","vs.compound":"compound","valid":"valid","link_q":"link","pk_q":"pk"}
+    # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"sentences","tb.noun_phrases":"noun_phrases","tb.words":"words","tb.polarity":"polarity","tb.subjectivity":"subjectivity","tb.p_pos":"tb.pos","tb.p_neg":"tb.neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.comp","valid":"valid","link_q":"link","pk_q":"pk"}
+    rename_dict = {"pk_q":"pk"}
     df_q = openDFcsv(main_path,filename)
-    # df_q = loadFromFolder(main_path,save=False)
     df_q = deleteUnnamed(df_q,"hash_key")
-    #    df_q = df_q.set_index('hash_key')
-
-    #    if "Unnamed: 0" in list(df_q.columns) :
-    #        df_q = df_q.loc[:, ~df_q.columns.str.contains('^Unnamed')]
-    #        print(df_q.dtypes)
-    
-    
     df_q_len = df_q.shape[0]
     if display :
         print("QUERRY dataset loaded from ",main_path)
         print("QUERRY dataset has entry length of :",df_q_len,"\n")
-    # suffix = ""
-    # if filtered_input_df :
-    #     suffix = "_final"
-    # else :
-    #     suffix = "_cap"
-    # df_p = openDFcsv(scarp_path,scarp_filename+suffix)
     df_p = openDFcsv(scarp_path,scarp_filename)
-    # df_p = loadFromFolder(path_parse_stat,save=False)
-    #df_p = df_p.set_index('hash_key')
     df_p = deleteUnnamed(df_p,"hash_key")
-    # if "Unnamed: 0" in list(df_p.columns) :
-    #     df_p = df_p.rename(columns={"Unnamed: 0":"index"})
     df_p_len = df_p.shape[0]
     if display :
         print("PARSSING dataset loaded from ",scarp_path)
-        print("PARSSING dataset has entry length of :",df_p_len," ("+str(round(100*df_p_len/df_q_len))+"% of querry data)\n")
-    
+        print("PARSSING dataset has entry length of :",df_p_len," ("+calculatePct(df_p_len,df_q_len)+"% of querry data)\n")
     df = df_q.join(df_p, how="inner",on='hash_key', lsuffix='_q', rsuffix='_p')
     df = df.rename(columns=rename_dict)
-    print(df_q.dtypes)
-
     df = df.drop_duplicates(subset=['pk'])
     # df = df.set_index('hash_key')
     # df = df[list(rename_dict.values())]
     join_df_len = df.shape[0]
     if display :
-        print("JOINED dataset has entry length of :",join_df_len," ("+str(round(100*join_df_len/df_p_len))+"% of parssing data)")
+        print("JOINED dataset has entry length of :",join_df_len," ("+calculatePct(join_df_len,df_p_len)+"% of parssing data)")
     if remove_invalid :
         df = df.loc[(df['valid'] == True)]
         join_df_valid_len = df.shape[0]
         if display :
-            print("JOINED dataset VALID entries :",join_df_valid_len," ("+str(round(100*join_df_valid_len/join_df_len))+"% of joined data)")
-            print("JOINED dataset INVALID entries :",join_df_len-join_df_valid_len," ("+str(round(100*(join_df_len-join_df_valid_len)/join_df_len))+"% of joined data)\n")
+            print("JOINED dataset VALID entries :",join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len)+"% of joined data)")
+            print("JOINED dataset INVALID entries :",join_df_len-join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len,ajust_for_denom=1)+"% of joined data)\n")
         join_df_len = join_df_valid_len
     if display :
-        print("TOTAL yield : from",df_q_len," to ",join_df_len,"("+str(round(100*join_df_len/df_q_len))+"% yeald)\n")
+        print("TOTAL yield : from",df_q_len," to ",join_df_len,"("+calculatePct(join_df_len,df_q_len)+"% yeald)\n")
     if save :
+        # df = deleteUnnamed(df,"hash_key")
         saveDFcsv(df,join1_path,join1_filename)
         if display :
             print("JOINED dataset saved here :",join1_path+join1_filename+".csv")
     return df
 
 
-def joinArticleStatsAndLLM(df_art,save=True,display=True) :
-    df_llm = loadFromFolder(llm_result,save=False) # ,"","".set_index('hash_key')
-    df_llm = df_llm.set_index('hash_key')
-    df = df_art.join(df_llm, how="inner",on='hash_key',lsuffix='', rsuffix='_llm')#, 
-    # df = df[union_fields2]
-    join2_df_len = df.shape[0]
-    df_art_len = df_art.shape[0]
-    if display :
-        print("JOINED2 dataset has entry length of :",join2_df_len," ("+str(round(100*join2_df_len/df_art_len))+"% of JOINED1 data)")
-    if save :
-        saveDFcsv(df,llm_join_out,llm_join_out_filename)
-    return df
+
 
 
 ################################## FILTERS AND SELECTION
@@ -453,28 +421,36 @@ def joinArticleStatsAndLLM(df_art,save=True,display=True) :
 def selectOnDf(df, date_start="2015-01-01", date_end="2017-06-01", categroy_list=[], source_list=[]) :
     df['published'] = df['published']
     # df = df.loc[(df['published'] >= parse_date(date_start).date()) & (df['published'] < parse_date(date_end).date())]
-    df = df.loc[(df['published'] >= date_start) & (df['published'] < date_end)]
+    if date_start != "" and date_end != "" :
+        df = df.loc[(df['published'] >= date_start) & (df['published'] < date_end)]
     if categroy_list != [] :
         df = df[df['category'].isin(categroy_list)]
     if source_list != [] :
         df = df[df['source_title'].isin(source_list)]
+    df = deleteUnnamed(df,"hash_key")
     return df
 
 def filterQuerryDataset(df,thd_high=5000,thd_low=30, display_stats=True,display_end_stats=False,save=False) :
     ser_source = df['source_title'].value_counts() #.to_frame("count").sort_values(by=['count'],ascending=False)
-    # print(ser_source)
+    if thd_high > 0 and thd_high < 1 :
+    #print(float(len(ser_source))*float(thd_high))
+        thd_high = ser_source[int(float(len(ser_source))*float(thd_high))]
+        # print(type(ser_source))
+        # print(type(ser_source.values()))
+        # print(list(ser_source.values())[int(float(len(ser_source))*float(thd_high))])
+        
     ser_source_low = ser_source[ser_source < thd_low]
     ser_source_high = ser_source[ser_source > thd_high]
     list_source_low = list(ser_source_low.keys())
     list_source_high = list(ser_source_high.keys())
     df_wo_low = df[~df['source_title'].isin(list_source_low)]
     df_only_low = df[df['source_title'].isin(list_source_low)]
-    df_wo_high = df[~df['source_title'].isin(list_source_high)]
+    # df_wo_high = df[~df['source_title'].isin(list_source_high)]
     df_only_high = df[df['source_title'].isin(list_source_high)]
     df_wo_low_high = df[~df['source_title'].isin(list_source_low+list_source_high)]
-    ser_source_wo_low = df_wo_low['source_title'].value_counts()
-    ser_source_wo_high = df_wo_high['source_title'].value_counts()
-    ser_source_only_high = df_only_high['source_title'].value_counts()
+    # ser_source_wo_low = df_wo_low['source_title'].value_counts()
+    # ser_source_wo_high = df_wo_high['source_title'].value_counts()
+    # ser_source_only_high = df_only_high['source_title'].value_counts()
     df_high_start = getStandardDfInput(list(df.columns))
     for source_high in list_source_high :
         newdf = df.loc[(df['source_title'] == source_high)].sort_values(by=["hash_key"],ascending=False).head(thd_high)
@@ -490,7 +466,9 @@ def filterQuerryDataset(df,thd_high=5000,thd_low=30, display_stats=True,display_
     if display_end_stats :
         print(final_df['source_title'].value_counts())
     if save :
-        saveDFcsv(final_df,main_path,filename+"_backup_before_filter",True)
+        df = deleteUnnamed(df,"hash_key")
+        saveDFcsv(df,main_path,filename+"_backup_before_filter",True)
+        final_df = deleteUnnamed(final_df,"hash_key")
         saveDFcsv(final_df,main_path,filename,True)
     return final_df
 
@@ -505,115 +483,42 @@ def displayDFsourceStats(df,label=" - DEFAULT -   ") :
     num_unique = len(list(df['source_title'].value_counts()))
     print(label,str({"Articles sum":num_entry,
                  "Unique sources":num_unique,
-                 "Unique/Sum":round(float(num_entry)/float(num_unique),2)}))
+                 "Unique/Sum":calculateRatio(num_entry,num_unique)}))
     return num_entry, num_unique
 
 def displayDFsourceLoss(label=" - LOSS -      ",entry_ct_list=[],unique_ct_list=[]) :
-    print(label,{"Articles sum":str(entry_ct_list[0]-entry_ct_list[1])+" (" + str(round((100*(-entry_ct_list[0]+entry_ct_list[1]))/float(entry_ct_list[0]),2))+"%)",
-                 "Unique sources :":str(unique_ct_list[0]-unique_ct_list[1])+" (" + str(round((100*(-unique_ct_list[0]+unique_ct_list[1]))/float(unique_ct_list[0]),2))+"%)",
-                 "Unique/Sum":str(round(float(entry_ct_list[0])/float(unique_ct_list[0]),2)) + " -> " + str(round(float(entry_ct_list[1])/float(unique_ct_list[1]),2))})
+    print(label,{"Articles sum":str(entry_ct_list[0]-entry_ct_list[1])+" (" + calculatePct(entry_ct_list[1],entry_ct_list[0],ajust_for_denom=1)+"%)",
+                 "Unique sources :":str(unique_ct_list[0]-unique_ct_list[1])+" (" + calculatePct(unique_ct_list[1],unique_ct_list[0],ajust_for_denom=1)+"%)",
+                 "Unique/Sum":calculateRatio(entry_ct_list[0],unique_ct_list[0]) + " -> " + calculateRatio(entry_ct_list[1],unique_ct_list[1])})
     # return num_entry, num_unique
     
-    
-    
-    # print(df[~ser_source_low])
-    # init_size = df.shape[0]
-    # init_uni_size = len(ser_source)
-    # if display_stats :
-    #     print("START       - ",{"Articles sum :":df.shape[0],"Number of unique sources :":len(ser_source),"Average number of article per source :":round(float(df.shape[0])/float(len(ser_source)),2)})
-    
-    # ser_source_high = ser_source[ser_source > thd_high]
-    # ser_source_low = ser_source[ser_source < thd_low]
-    # ser_source_med = ser_source[(ser_source > thd_low) & (ser_source < thd_high)]
-    # print("ser_source_low",ser_source_low)
-    # ser_source_low2 = ser_source_low['source_title'].value_counts().to_frame("count").sort_values(by=['count'],ascending=True)
-    # print("ser_source_low2",ser_source_low)
-    # list_source_low = list(ser_source_low.keys())
-    # df_low = df['source_title'].isin(list_source_low)
-    # df = df[~df_low]
-    # #df_low_len = df_low.value_counts().to_frame("count").sum()
-    # df_low_len = len(list(df.value_counts().to_frame("count")))
-    # if display_stats :
-    #     print("TOO LOW     - ",{"Articles sum :":df.shape[0],"Number of unique sources :":df_low_len,"Average number of article per source :":round(float(df_low.shape[0])/float(df_low_len),2)})
-    #     print("TOO LOW     - ","Articles removed :",df_low.shape[0],'  ('+str(round(100*df_low.shape[0]/df.shape[0],2))+'%)')
-    
-    # # ser_source = df['source_title'].value_counts()
-    # # ser_source_high = ser_source[ser_source > thd_high]
-    # list_source_high = list(ser_source_high.keys())
-    # start_df = getStandardDfInput(list(df.columns))
-    # for source_high in list_source_high :
-    #     newdf = df.loc[(df['source_title'] == source_high)].sort_values(by=["hash_key"],ascending=False).head(thd_high)
-    #     start_df = pd.concat([start_df,newdf]).reset_index(drop=True)
-    
-    # df_high = df['source_title'].isin(list_source_high)
-    # df_high_len = len(df_high.value_counts())
-    # init_size2 = df.shape[0]
-    # df = df[~df_high]
-    # df = pd.concat([df,start_df]).reset_index(drop=True)
-    # ser_source = df['source_title'].value_counts()
-    # end_size = df.shape[0]
-    # end_uni_size = len(ser_source)
-    # df["hash_key"].drop_duplicates()
-    # if display_stats :
-    #     print("TOO HIGH    - ",{"Articles sum :":df_high.shape[0],"Number of unique sources :":df_high_len,"Average number of article per source :":round(df_high.shape[0]/df_high_len)})
-    #     print("TOO HIGH    - ","Articles removed :",init_size2-df.shape[0],'  ('+str(round(100*df_high.shape[0]/df.shape[0],2))+'%)')
+def calculateRatio(n1,n2,stringReturn=True,round_num=2) :
+    our_num = round(float(n1)/max(float(n2),1),round_num)
+    if stringReturn :
+        if n2 != 0 :
+            return str(our_num)
+        else :
+            "error_div_0"
+    else :
+        return float(our_num)
+     
 
-    #     print("FINAL DF    - ",{"Articles sum :":df.shape[0],"Number of unique sources :":end_uni_size,"Average number of article per source :":round(df.shape[0]/end_uni_size)})
-    #     # print("len loss :",float(100*(init_size-end_size)/init_size),"%","     uni_len loss :",float(100*(init_uni_size-end_uni_size)/init_uni_size),"%")
-    #     # print("MAX :",max(df['source_title'].value_counts()),"  MIN :",min(df['source_title'].value_counts()))
+def calculatePct(n1,n2,stringReturn=True,round_num=2,ajust_for_denom=0) :
+    our_num = round((100*(-(float(n2)*ajust_for_denom)+float(n1)))/max(float(n2),1),round_num)
+    if stringReturn :
+        if n2 != 0 :
+            return str(our_num)
+        else :
+            "error_div_0"
+    else :
+        return float(our_num)
     
-    # if display_end_stats :
-    #     plotDFstatisticsQuerry(df,onlyYear=True)
-    # if save :
-    #     saveDFcsv(df,main_path,filename+"_cap")
-    # return df
-    # ssource_limiy_count = int(ser_source.iloc[[int(thd_low)]]["count"].tolist()[0])
-    # ser_source = ser_source[ser_source['count'].between(source_limiy_count, 1000000)]
-
-
-# df = openDFcsv("C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_1_query_main/arc/","query_medium_2010_to_2023")
-# display(df)
-# df = randomSampleSelection(df,30)
-# display(df)
-def mainJoin() :
-    #join1_path,embdedding_path,embdedding_path_raw,keyword_path,join1_filename,embdedding_filename,embdedding_filename_raw,keyword_filename
-    ekml.mainKeywordWF(9999999,500)
-    join1_path_i = join1_path
-    embdedding_path_i = embdedding_path
-    embdedding_path_raw_i = embdedding_path_raw
-    keyword_filename_i = keyword_filename
-    join1_filename_i = join1_filename
-    embdedding_filename_i = embdedding_filename
-    embdedding_filename_raw_i = embdedding_filename_raw
-    embdedding_path_raw_i = embdedding_path_raw
-    keyword_path_i = keyword_path
-    join1 = openDFcsv(join1_path_i,join1_filename_i)
-    embdedding = openDFcsv(embdedding_path_i,embdedding_filename_i)
-    embdedding_raw = openDFcsv(embdedding_path_raw_i,embdedding_filename_raw_i)
-    keyword = openDFcsv(keyword_path_i,keyword_filename_i)
-    join1 = join1.set_index('hash_key')
-    embdedding = embdedding.set_index('hash_key')
-    keyword = keyword.set_index('hash_key')
-    print("join1 col")
-    print(join1.dtypes)
-    print(join1.shape[0])
-    print("embdedding col")
-    print(embdedding.dtypes)
-    print(embdedding.shape[0])
-    print("keyword col")
-    print(keyword.dtypes)
-    print(keyword.shape[0])
-    # embdedding =embdedding[["hash_key"]]
-    df = join1.join(embdedding, how="inner",on='hash_key',lsuffix='_a', rsuffix='_b') #
-    df = df.join(keyword, how="inner",on='hash_key',lsuffix='_c', rsuffix='_d') #
-    # df = join1.join(keyword, how="inner",on='hash_key',lsuffix='_z', rsuffix='_a')
-    print("out : ",join2_path,join2_filename)
-    saveDFcsv(df,join2_path,join2_filename)
-    # return df
+    
+def mainJoinOut() :
+    df = openDFcsv(keyword_path,keyword_filename)
+    df_out = ekml.generateNLPonKeywords(df,0,df.shape[0],True)
+    # df_out = deleteUnnamed(df_out,"hash_key")
+    saveDFcsv(df_out, join2_path,join2_filename)
+    return df_out
     
 print("IMPORT : article_scraping_lib")
-# join1_path+join1_filename
-# embdedding_filename+embdedding_filename
-# embdedding_path_raw+embdedding_filename_raw
-# keyword_path
-# keyword_filename

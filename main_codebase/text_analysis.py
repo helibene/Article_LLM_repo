@@ -31,6 +31,7 @@ warnings.filterwarnings('ignore')
 
 MODEL_ID = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 MAX_SENTENCE_LEN = 50
+MAX_NUM_SENTENCES = 40
 # vs : vaderSentiment
 # tb : textblob
 # ts :transformers
@@ -104,7 +105,7 @@ class text_analysis :
         dict_out["tb.sub"] = tb_sub #[0.0, 1.0]
         dict_out["tb.polaj"] = (tb_pola+1)/2 #[0.0, 1.0]
         return dict_out
-    def sentimentStats(self,text,dict_out={},ret_list=[True,True,True]) :
+    def sentimentStats(self,text,dict_out={},ret_list=[True,True,True,True,True]) :
         if ret_list[0] :
             textblob_nba = TextBlob(text, analyzer=self.tb_NaiveBayes)
             tp_pos = textblob_nba.sentiment.p_pos
@@ -122,6 +123,13 @@ class text_analysis :
             sp = self.tf_sentiment_pipeline(text)
             dict_out["ts.neg"] = sp[0][0]['score']
             dict_out["ts.pos"] = sp[0][1]['score']
+        if ret_list[3] :
+            dict_out["tb.class"] = bool(dict_out["tb.neg"]<dict_out["tb.pos"])
+            dict_out["vs.class"] = bool(dict_out["vs.neg"]<dict_out["vs.pos"])
+            dict_out["ts.class"] = bool(dict_out["ts.neg"]<dict_out["ts.pos"])
+        if ret_list[4] :
+            dict_out["al.pos"] = float(float(int(dict_out["tb.class"])+int(dict_out["vs.class"])+int(dict_out["ts.class"]))/3)#float(dict_out["tb.polaj"])*
+            dict_out["al.neg"] = 1-dict_out["al.pos"]
         return dict_out
     
     def analyseText2(self, text,noLen=False) :
@@ -135,12 +143,19 @@ class text_analysis :
         sentences_list = textblob.sentences
         dict_list = []
         len_list = []
+        sent_count = 0
         for sentences in sentences_list :
-            sent_len = len(sentences)
-            if sent_len < MAX_SENTENCE_LEN :
-                len_list.append(sent_len)
-                new_dict = self.analyseText2(str(sentences),True)
-                dict_list.append(new_dict | self.lenStats(text))
+            if sent_count<MAX_NUM_SENTENCES :
+                sent_len = len(sentences)
+                # print(sent_len)
+                if sent_len < MAX_SENTENCE_LEN :
+                    len_list.append(sent_len)
+                    new_dict = self.analyseText2(str(sentences),False)
+                    new_dict["tb.class"] = 0
+                    new_dict["vs.class"] = 0
+                    new_dict["ts.class"] = 0
+                    dict_list.append(new_dict | self.lenStats(text))
+                    sent_count = sent_count + 1
         out_dict = self.weigthAverage(dict_list,len_list)
         return out_dict
         
@@ -158,37 +173,6 @@ class text_analysis :
                 sum_dict[key] = sum_num/len_list_sum
             return sum_dict
         else :
-            return {"nlp_error":True}
-            
-# test_list = ["""Kyiv, Ukraine
-# CNN
-#   — 
-# Russian forces deported Bohdan Yermokhin from the occupied Ukrainian city of Mariupol in the spring of 2022, flew him to Moscow on a government plane and placed him into a foster family. He was sent to a patriotic camp near the capital where flag-waving staff praised Russian President Vladimir Putin and tried to teach him nationalistic songs.
+            return {"nlp_valid":False}
 
-# The Ukrainian teenager was given a Russian passport and sent to a Russian school. And then, in the fall of 2023, not long before his 18th birthday, he received a summons from a Russian military recruitment office.
-
-# Yermokhin, who’s now back in Ukraine and recovering from his ordeal in Kyiv, told CNN he believed this was the last step in Russia’s attempt to bully him into submission – a bid to sign him up as a soldier to fight against his own people.
-
-# “(I was told that) Ukraine was losing, that children were used for organ donations there, and that I would be sent to war right away. I told them that if I was sent to the war, at least I would fight for my own country, not for them,” he said.
-
-# Yermokhin was part of a group of children known as the “Mariupol 31,” who were taken to Russia. Ukrainian authorities estimate that 20,000 children have been forcibly transported to Russia since Moscow launched its full-scale invasion of the country in February 2022. More than 2,100 children remain missing, according to official statistics, but the government says the real number could be much higher."""]
-# # test_list = ["Amazing"]
-# ta = text_analysis()
-# list_out = []
-# for string in test_list :
-#     out_dict = ta.analyseArticle(string)
-#     list_out.append(out_dict)
-#     #print(string,"   ",out_dict)
-# df = pd.DataFrame(list_out) # ,columns = list(list_out[0].keys)
-
-
-
-
-# test_list = ['technology', 'file', 'advantages', 'things', 'know', 'right', 'cofounder', 'think', 'competitive', 'aesthetics', 'adobe', 'postscript', 'going', 'wanted', 'john', 'wharton', 'warnock', 'point']
-# test_list = ['committee', 'technology', 'services', 'plans', 'president', 'information', 'purdue', 'director', 'streamline', 'vice', 'sustaining', 'student', 'plan', 'synergies']
-# test_list = ['nuclear', 'chemical', 'mit', 'gates', 'wins', 'students', 'research', 'substrate', 'engineering', 'chris', 'scholarship', 'boyce', 'work']
-# test_list = ['happy hello', 'sad', "work", "lofe","trump"]
-# test_list = ['happy hello']
-# test_list = ['Fuck you', 'file', 'advantages', 'things', 'know', 'right', 'cofounder', 'think', 'competitive', 'aesthetics', 'adobe', 'postscript', 'going', 'wanted', 'john', 'wharton', 'warnock', 'point']
-# test_list = ['youre', 'united', 'sea', 'role', 'safer', 'risk', 'technology', 'dangerous', 'drivers', 'jobs', 'risks']
 print("IMPORT : text_analysis")

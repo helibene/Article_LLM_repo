@@ -5,14 +5,13 @@ Created on Thu Mar 21 19:25:29 2024
 @author: Alexandre
 """
 import main_var
-env = "test/"
-mv = main_var.main_var(env=env)
+mv = main_var.main_var()
 
 from newspaper import Article, ArticleException
 import nltk
 import os
 import time
-from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile
+from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,deleteUnnamed,display_df
 import hashlib
 from dateparser import parse as parse_date
 import pandas as pd
@@ -112,6 +111,7 @@ def getStartArticle(article_dict,length=300) :
 
 def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1) :
     valid = True
+    nlp_valid = True
     pk = url.split("articles/")[1].replace("?oc=5","")
     hash_key = hashlib.shake_256(str(pk).encode()).hexdigest(20)
     out_dict = {"url":url,"pk":pk,"hash_key":hash_key}
@@ -138,7 +138,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
             if add_nlp == 1:
                 analysis_nlp_dict = ts.lenStats(text)
             out_dict = out_dict | ar_dict
-            out_dict["valid"] = True
+            # out_dict["valid"] = True
             out_dict["text_len"] = text_len
             out_dict["keywords_list"] = out_dict["keywords"]
             # out_dict["summary"] = out_dict["summary"]
@@ -149,27 +149,32 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
                 del text
         else :
             valid = False
+            nlp_valid = False
             display_text = display_text+"Not valid : Text empty)"
     else :
         valid = False
+        nlp_valid = False
         display_text = display_text+"Not valid : Dict could not be read)"
     if valid:
         if display :
             print(display_text+"Valid Article)")
+            out_dict["valid"] = valid
+            out_dict["nlp_valid"] = nlp_valid
         return out_dict
     else :
         if display :
             print(display_text)
-        out_dict["valid"] = False
+        out_dict["valid"] = valid
+        out_dict["nlp_valid"] = False
         return out_dict
         
 
-def readArticleFileTable(index_from=0,index_to=1000,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False):
+def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False):
     #stat_field_selection = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list","summary", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
     # stat_field_selection = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
     stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list","summary", "text_len","valid"]
-    stat_field_selection1 = ['url', 'pk', 'hash_key', 'publish_date', 'title', 'authors', 'text', 'keywords', 'valid', 'text_len', 'keywords_list', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
-    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
+    stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", "publish_date", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
+    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","nlp_error","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
     if add_nlp == 0 :
         stat_field = stat_field_selection0
     if add_nlp == 1 :
@@ -177,32 +182,36 @@ def readArticleFileTable(index_from=0,index_to=1000,save_articles=True,save_fina
     if add_nlp == 2 :
         stat_field = stat_field_selection2
     df = pd.DataFrame([], columns = stat_field)
-    # suffix = ""
-    # if filtered_input_df :
-    #     suffix = "_final"
-    # else :
-    #     suffix = "_cap"
-    # df_input = openDFcsv(open_path, filename_input+suffix)
     df_input = openDFcsv(open_path, filename_input)
-    df_input_url = df_input["link"][index_from:min(index_to,df_input.shape[0])]
+    index_to = min(index_to,df_input.shape[0])
+    df_input_url = df_input["link"][index_from:index_to]
     art_count = 0
     for url_entry in df_input_url:
+        
         ar_list = readStatsFromURL(url_entry,save_articles,display_df,art_count,add_nlp)
         # print(ar_list.keys())
+        # print(df.dtypes)
         df = addDictToDF(df,ar_list)
         art_count = art_count + 1
-        if (art_count%int((min(index_to,df_input.shape[0])-index_from)*step_pct) == 0 or art_count==len(df_input_url)) and save_steps :
-            df_out = df[output_fields]
+        # if display_df :
+        #     print(" - #"+str(art_count)+" article registered")
+        if (art_count%int((index_to-index_from)*step_pct) == 0 or art_count==len(df_input_url)) and save_steps :
+            # df_out = df[output_fields]stat_field
+            df_out = df[stat_field]
+            df_out = deleteUnnamed(df_out,"hash_key")
+            # saveDFcsv(df_out, save_path, filename_out+"_"+str(art_count)) # , mode="w"
             saveDFcsv(df_out, save_path, filename_out+"_"+str(art_count)) # , mode="w"
-        df = df[output_fields]
+        # df = df[output_fields]
         
     if save_final :
-        df = df.drop[["Unnamed: 0_q","Unnamed: 0.1]"]]
-        saveDFcsv(df, save_path, filename_out+"_backup") # , mode="w"
+        df = df[stat_field]
+        df = deleteUnnamed(df,"hash_key")
+        
+        # saveDFcsv(df, save_path, filename_out+"_backup") # , mode="w"
         saveDFcsv(df, save_path, filename_out,True) # , mode="w"
         print("Final file saved here :",save_path)
     if display_df :
-        display(df)
+        display_df(df)
     return df
 
 def fillDFwithListList(df, ar_list):
@@ -214,8 +223,9 @@ def fillDFwithListList(df, ar_list):
     return df
 
 def addDictToDF(df, ar_dict):
-    df_add = pd.DataFrame([ar_dict], columns = ar_dict.keys())
-    df = pd.concat([df,df_add]).reset_index(drop=True)
+    df_add = pd.DataFrame([ar_dict], columns = ar_dict.keys()).reset_index(drop=False)#.reset_index(inplace=True, drop=True)
+    # df = df.reset_index(inplace=True, drop=True)
+    df = pd.concat([df,df_add])#.reset_index(drop=False)#.reset_index(inplace=True, drop=True)#
     return df
 
 def articleDictToFile(ar_dict, path) :  #requires pk & text
@@ -233,24 +243,5 @@ def articleDictToFile(ar_dict, path) :  #requires pk & text
     else :
         print("ERROR : articleDictToFile could not find 'text' or 'hash_key' in the dict provided")
         return False
-
-def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True):
-    if index_to == -1 :
-        index_to = df_main.shape[0]
-    df_np = df_main["word_combined_all"].apply(np.array).to_numpy()[0:index_to]
-    df_hash = df_main["hash_key"].apply(np.array).to_numpy()[0:index_to]
-    mat_index = []
-    for i in range(index_from,index_to) :
-        if display_log :
-            print(" - Generate NLP for article #"+str(i)+"  (char:"+str(len(df_np[i]))+")")
-        nlp_dict = ts.analyseText2(str(df_np[i]),True)
-        mat_index.append(nlp_dict|{"hash_key":df_hash[i]})
-    df = pd.DataFrame(mat_index, columns = list(mat_index[0].keys())) 
-    df.set_index("hash_key", inplace=True)
-    df_main.set_index("hash_key", inplace=True)
-    display(df)
-    display(df_main)
-    df = df_main.join(df,on='hash_key', how="inner",lsuffix='_k')
-    return df
-
-print("IMPORT : article_parsing_lib ")
+    
+print("IMPORT : article_parsing_lib")

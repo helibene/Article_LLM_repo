@@ -42,7 +42,7 @@ PLOT_RENDER = PLOT_RENDER_LIST[1]
 TAG_SELECTION_LIST = ["NNP","NN","JJ"]
 MARGINAL_LIST = [None,'rug', 'box', 'violin','histogram']
 TRENDLINE_LIST = [None,'ols', 'lowess', 'rolling', 'expanding','ewm']
-DO_NOT_RENDER_PLOT=True
+DO_NOT_RENDER_PLOT=False
 
 
 

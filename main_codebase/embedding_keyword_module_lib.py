@@ -6,26 +6,12 @@ Created on Thu Mar 21 22:06:14 2024
 """
 
 import main_var
-env = "test/"
-mv = main_var.main_var(env=env)
+mv = main_var.main_var()
 
-from utils_art import *
-
-from sklearn.datasets import make_classification
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
-from sklearn.decomposition import IncrementalPCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.manifold import Isomap
-from sklearn.neighbors import KNeighborsTransformer
-from sklearn.pipeline import make_pipeline
-from sklearn.datasets import make_regression
+from utils_art import openDFcsv,saveDFcsv,display_df,deleteUnnamed
 
 import pandas as pd
 import numpy as np
-from textblob import TextBlob
-import tempfile
-# np.random.seed(0)
 
 from IPython.core.display import Image as image
 from PIL import Image
@@ -82,18 +68,18 @@ def dfColumnToMatrix(df,data_col="o_data",max_index=9999,index_col="hash_key",ma
     
 def extractEmbedding(df,number_entries=99999999999): #51372
     print(df.dtypes)
-    df_out = dfColumnToMatrix(df,data_col="o_content",max_index=number_entries,index_col="hash_key",matToDf=True) #
+    df_out = dfColumnToMatrix(df,data_col="o_data",max_index=number_entries,index_col="hash_key",matToDf=True) #
     return df_out
 
-def extractEmbeddingFromFile(number_entries=10000,sisplay_stats=True): #51372
+def extractEmbeddingFromFile(number_entries=10000,display_stats=True): #51372
     df_main = openDFcsv(folder_path_embd_df,filename_embd_df)
     print(folder_path_embd_df+filename_embd_df)
     emb_mat = extractEmbedding(df_main,number_entries)
-    if sisplay_stats :
+    if display_stats :
         print("df_main : ",df_main)
-        display(df_main)
+        display_df(df_main)
         print("emb_mat : ",emb_mat)
-        display(emb_mat)
+        display_df(emb_mat)
     saveDFcsv(emb_mat, folder_path_embd_raw, filename_embd_raw_save,True)
     return emb_mat
 ### Keyword Functions
@@ -123,7 +109,7 @@ def getMostCommunKeywords(union_list_np, source_limit=10000,return_word_list=Tru
     df = pd.DataFrame(union_list_np, columns=['keyword'])
     df = df['keyword'].value_counts().to_frame("count").sort_values(by=['count'],ascending=True)
     if display_stats :
-        display(df)
+        display_df(df)
     count_sum_before = df["count"].sum()
     entry_sum_before = df.shape[0]
     source_limiy_count = int(df.iloc[[int(-min(entry_sum_before,source_limit))]]["count"].tolist()[0])
@@ -147,25 +133,33 @@ def cleanString(string) :
     else :
         return ""
 
+def cleanString(string) :
+    #~out_str = string.strip("][”“|’><%—–//").replace("'", "").replace("\\d", "");
+    out_str = "".join(re.findall("[a-zA-Z]+", string))
+    if len(out_str)>3:
+        return out_str
+    else :
+        return ""
+
 def decomposeTitle(string, getList=True) :
     decomposed = "=".join(re.findall("[a-zA-Z]+", string.lower()))
     if getList :
         decomposed = decomposed.split('=')
+        # if type(decomposed) != type(None) :
+        #     for i in range(len(decomposed)) :
+        #         if len(decomposed[i])<3:
+        #             decomposed = decomposed.remove(decomposed[i])
     return decomposed
 
 def decomposeKeywordList(string,getList=True) :
     decomposed = "&".join(re.findall("[a-zA-Z]+", string.lower())) #.split(', ')
     if getList :
         decomposed = decomposed.split('&')
+        # if type(decomposed) != type(None) :
+        #     for i in range(len(decomposed)) :
+        #         if len(decomposed[i])<3:
+        #             decomposed = decomposed.remove(decomposed[i])
     return decomposed
-#     blob = TextBlob(str(string))
-#     word_list = []
-#     for wordT in blob.tags :
-#         if wordT[1] in TAG_SELECTION_LIST :
-#             string2 = str(cleanString(wordT[0].lower()))
-#             if string2 != "" :
-#                 word_list.append(string2)
-#     return word_list
 
 def df_setup(par_list) :
     df = pd.DataFrame(par_list)#
@@ -176,7 +170,7 @@ def df_setup(par_list) :
     df["0"] = df["0"].astype(str)
     df['word_combined'] = df[[str(i) for i in range(col_count)]].agg(' '.join, axis=1)
     #df['word_combined'].replace(" #","", inplace=True)
-    display(df)
+    display_df(df)
     print(df[["word_count"]].describe())
     return df
 
@@ -204,7 +198,7 @@ def genrateKeywordExtract(df_main, entry_limit=10, common_word_max = 10, column_
     df['word_combined_s'] = df['word_combined_s'].str.replace(r'\s+', ' ', regex=True)
     return df
 
-def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True):
+def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True,display_res=True):
     if index_to == -1 :
         index_to = df_main.shape[0]
     df_np = df_main["word_combined_all"].apply(np.array).to_numpy()[0:index_to]
@@ -218,10 +212,15 @@ def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True):
     df = pd.DataFrame(mat_index, columns = list(mat_index[0].keys())) 
     df.set_index("hash_key", inplace=True)
     df_main.set_index("hash_key", inplace=True)
-    display(df)
-    display(df_main)
-    df = df_main.join(df,on='hash_key', how="inner",lsuffix='_k')
-    return df
+    df_out = df_main.join(df,on='hash_key', how="inner",rsuffix='_k')
+    if display_res :
+        print("Input DF shape :",df_main.shape)
+        display_df(df_main.head(3))
+        print("Generated DF shape :",df.shape)
+        display_df(df.head(3))
+        print("Output DF shape :",df_out.shape)
+        display_df(df_out.head(3))
+    return df_out
 
 def mainKeywordWF(entry_limit=9999999,common_word_max=500) :
     df_main = openDFcsv(join1_path,join1_filename)
@@ -232,7 +231,12 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500) :
     df = df[["word_count_f_t","word_combined_f_t","word_count_f_k","word_combined_f_k","word_count_s_t","word_combined_s_t","word_count_s_k","word_combined_s_k"]]#,"0_s_k","0_s_t"]]
     df['word_combined_all'] = df[["word_combined_f_t","word_combined_f_k"]].agg(' '.join, axis=1)
     df['word_count_all'] = df["word_count_f_t"]+df["word_count_f_k"]
+    df['word_combined_all_sel'] = df[["word_combined_s_t","word_combined_s_k"]].agg(' '.join, axis=1)
+    df['word_count_all_sel'] = df["word_count_s_t"]+df["word_count_s_k"]
+    print(df.columns)
     df = df_main.join(df, how="inner")
+    df = deleteUnnamed(df,"hash_key")
     saveDFcsv(df, keyword_path, keyword_filename,True)
+    return df
 
-
+print("IMPORT : embedding_keyword_module_lib")

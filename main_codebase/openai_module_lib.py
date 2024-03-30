@@ -4,11 +4,12 @@ Created on Fri Mar 22 00:13:11 2024
 
 @author: Alexandre
 """
-import main_var
-env = "test/"
-mv = main_var.main_var(env=env)
 
-from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,cfn_index,cfn_field
+
+import main_var
+mv = main_var.main_var()
+
+from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,cfn_index,cfn_field,getOpenAIKey
 import openai
 import os
 from os import *
@@ -20,10 +21,11 @@ import plotly.express as px
 from sklearn.manifold import TSNE
 import hashlib
 import pandas as pd
+from utils_art import deleteUnnamed,display_df
 
 
 # Chat GPT
-openai.api_key = "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"
+openai.api_key = getOpenAIKey('C:/Users/User/OneDrive/Desktop/Article_LLM/api_key/','api_key')
 model_list = ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k","gpt-4-0125-preview"]
 role_list = ["user","system", "assistant", "tool"]
 max_token=100
@@ -141,30 +143,16 @@ def parseList(list_par) :
         output_str = list_par
     return str(output_str)
 
-
 def textListToText(text_list) :
     out_list = ""
     for text in text_list :
         out_list = out_list + text
     return out_list
 
-# def llmInputConfArticle(article_text,llm_prompt) :
-#     context_prompt = "\nHere is the article :\n"
-#     final_prompt = str(llm_prompt)+str(context_prompt)+article_text
-#     return llmInputConf(final_prompt)
-
-    
 def num_tokens_from_string(text="", encoding_name="cl100k_base"):
     encoding = tiktoken.get_encoding(encoding_name)
     num_tokens = len(encoding.encode(text))
     return num_tokens
-
-
-# def saveNP(data,fmt='%f'): #path,
-#     np.savetxt("C:/Users/User/OneDrive/Desktop/article/file_2/test_llm_output/test_save.txt",data, fmt=fmt)
-
-# def loadNP(): #path
-#     return np.loadtxt('C:/Users/User/OneDrive/Desktop/article/file_2/test_llm_output/test_save.txt', dtype=float)
 
 def plot3Dpn(np_data):
     fig = px.scatter_3d(x=np_data[:, 0], y=np_data[:, 1], z=np_data[:, 2],color=np_data[:, 3], opacity=0.8)
@@ -181,9 +169,6 @@ def plotTSNE(data,n_components=2,perplexity=3,random_state=10):
         yaxis_title="Second t-SNE",
     )
     fig.show()
-
-
-
 
 def loadArticleFolderList(folder_path="",cutoff=99999999) :
     root_path = Path(folder_path)
@@ -222,7 +207,7 @@ def getStatsOnArticleText(article_text_list) :
 def getDataToQuerryListLLM(max_prompt=5,articTquestF=True) :
     out_dict_List = []
     if articTquestF :
-        getNumberOfArticles(open_path)
+        getNumberOfArticles(mv.article_path)
         filename_list = loadArticleFolderList(mv.article_path,max_prompt) # ["fa897c02295f34ce2e15f602769edf204ea00be7.txt"]
         out_dict_List = loadListArticleHash(mv.article_path,filename_list)
     else :
@@ -257,14 +242,7 @@ def addDictToDF(df=None, ar_dict={},selected_fields=[]):
         print("WARNING : df could not be added because the columns list is different")
     return df
 
-
-
-
-
-
-
-
-def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembedding=False,dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=500,save_final=True,display_df=True,save_steps=True,step_pct=0.01):
+def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembeddingFALSE=False,dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=1000,save_final=True,display_df_var=True,save_steps=True,step_pct=0.01):
     model_list = [0] # [0,1,2]
     temperature_list = [0.5] # [0,0.25,0.5,0.75,1]
     df=None
@@ -277,8 +255,8 @@ def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembedding=False,d
         for model_n in model_list:
             for temperature_n in temperature_list :
                 valid_dict = {"valid":"VALID"}
-                input_dict = ()
-                if articleTRUEquestionFALSE :
+                input_dict = {}
+                if completionTRUEembeddingFALSE :
                     input_dict = llmInputConfCompletion(prompt["text"],model_num=model_n,temperature=temperature_n,hash_key=prompt["hash_key"])
                     out_raw = apply_completions(input_dict)
                     out_dict = outputDictParseCompletion(out_raw)
@@ -290,43 +268,22 @@ def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembedding=False,d
                         prompt["text"] = prompt["text"][0:cara_max_emb]
                     print(" - #"+str(count),"- ",valid_dict,"-",num_tokens,"-",len(prompt["text"]),"-",prompt["hash_key"])
                     input_dict = llmInputConfEmbeddings(prompt["text"],dimensions=dimension,hash_key=prompt["hash_key"])
-                    print(input_dict)
-                    print(type(input_dict))
+                    #print(input_dict)
+                    # print(type(input_dict))
                     out_raw = apply_embeddings(input_dict)
                     out_dict = outputDictParseEmbeddings(out_raw)
                     selected_fields = selected_fields_emp
-                final_dict = input_dict | out_dict  # | valid_dict
+                final_dict = input_dict | out_dict | valid_dict
                 df = addDictToDF(df,final_dict,selected_fields)
-                if (count%int(float(min(max_prompt,len(prompt_list)))*step_pct) == 0  and count != 0) and save_steps:
-                    saveDFcsv(df.set_index(set_index_key), save_path, filename_save+"_"+str(count),True)
+                if (count%max(1,int(float(min(max_prompt,len(prompt_list)))*step_pct)) == 0  and count != 0) and save_steps:
+                    df_int = deleteUnnamed(df,set_index_key)
+                    saveDFcsv(df_int, save_path, filename_save+"_"+str(count),True)
                 count = count + 1
-    if display_df :
-        display(df.head(3))
+    if display_df_var :
+        display_df(df.head(3))
     if save_final :
-        saveDFcsv(df.set_index(set_index_key), save_path, filename_save,True)
+        df = deleteUnnamed(df,set_index_key)
+        saveDFcsv(df, save_path, filename_save,True)
     return df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 print("IMPORT : openai_module_lib")

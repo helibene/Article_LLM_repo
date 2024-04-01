@@ -7,7 +7,7 @@ Created on Thu Mar 21 20:14:51 2024
 
 
 class main_var :
-    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/",env="test_new/"):
+    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/",env=".main/"):#"test_new/"
         self.main_path = main_path
         self.env = env
         self.query_path = self.main_path+"1_1_query_main/"+self.env
@@ -29,6 +29,7 @@ class main_var :
         self.completion_filename = "completion_file"
         self.join2_filename = "join2_file"
         self.visu_filename = "visu_file"
+        self.query_col_list = ["hash_key","title","category","source_title","published","year","year_month","source_url","url_list","url_TLD","link","pk"]
 
 mv = main_var()
 

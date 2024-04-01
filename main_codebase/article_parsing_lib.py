@@ -23,6 +23,11 @@ import warnings
 warnings.filterwarnings('ignore')
 ts = text_analysis.text_analysis()
 
+
+# All columns : ["html", "title", "authors", "publish_date", "text", "top_image", "images", "movies", "keywords", "summary"]
+_PARSING_COL_SELECTION = ["title", "authors","keywords", "publish_date", "text"] #,"summary"
+
+
 _SELECTION = 3
 _LOAD_NLP = True
 
@@ -33,15 +38,14 @@ save_path = mv.scarp_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_2
 filename_out = mv.scarp_filename
 
 save_path_article = mv.article_path   #   "C:/Users/User/OneDrive/Desktop/article/files_3/1_3_article_main/"+env #article_download_main_2
-
 # output_fields = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"], "summary"
 output_fields = ['url', 'pk', 'hash_key', 'publish_date', 'title', 'authors', 'valid', 'text_len', 'keywords_list'] + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]#, "summary"
 
 
-def urlToDict(url, selection=_SELECTION) :
+def urlToDict(url) :
     article = urlToArticle(url,nlp=_LOAD_NLP)
     if type(article) != type(None) :
-        out_dict = articleToDict(article, selection)
+        out_dict = articleToDict(article)
         return out_dict
     else :
         return None
@@ -63,21 +67,9 @@ def urlToArticle(url, display=False,nlp=False) :
         pass
         return None
 
-def articleToDict(article, selection=_SELECTION) :
-    list_parse_main = []
-    list_parse_total = ["html", "title", "authors", "publish_date", "text", "top_image", "images", "movies", "keywords", "summary"]
-    list_parse_simple = ["title", "authors", "publish_date", "text", "keywords"]
-    list_parse_stats = ["title", "authors", "keywords", "text"]
-    list_parse_stats_text = ["title", "authors","keywords","summary", "text"]
+def articleToDict(article) :
     out_dict = {}
-    if selection == 0 :
-        list_parse_main = list_parse_total
-    if selection == 1 :
-        list_parse_main = list_parse_simple
-    if selection == 2 :
-        list_parse_main = list_parse_stats
-    if selection == 3 :
-        list_parse_main = list_parse_stats_text
+    list_parse_main = _PARSING_COL_SELECTION
     for parse_str in list_parse_main :
         if parse_str == "html" :
             out_dict[parse_str] = article.html
@@ -115,23 +107,24 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
     pk = url.split("articles/")[1].replace("?oc=5","")
     hash_key = hashlib.shake_256(str(pk).encode()).hexdigest(20)
     out_dict = {"url":url,"pk":pk,"hash_key":hash_key}
-    ar_dict = urlToDict(url,_SELECTION)
+    ar_dict = urlToDict(url)
     display_text = " - Loadind Article #"+str(increment)+"   ("
     if type(ar_dict) != type(None) :
         text = ar_dict['text']
         text_len = len(text)
         if text_len != 0:
-            if 'publish_date' in ar_dict.keys() and False :
-                if type(ar_dict['publish_date']) == type(None) :
-                    publish_date = ""
-                else :
-                    if type(parse_date(str(ar_dict['publish_date']))) == type(None) :
-                        publish_date = ""
-                    else :
-                        publish_date = str(parse_date(str(ar_dict['publish_date'])).date().strftime('%Y-%m-%d'))
-                out_dict["publish_date"] = publish_date
-            else :
-                out_dict["publish_date"] = None
+            # if 'publish_date' in ar_dict.keys() and False :
+            #     if type(ar_dict['publish_date']) == type(None) :
+            #         publish_date = ""
+            #     else :
+            #         if type(parse_date(str(ar_dict['publish_date']))) == type(None) :
+            #             publish_date = ""
+            #         else :
+            #             publish_date = str(parse_date(str(ar_dict['publish_date'])).date().strftime('%Y-%m-%d'))
+            #     out_dict["publish_date"] = publish_date
+            # else :
+            #     out_dict["publish_date"] = None
+            out_dict["publish_date"] = "xxx"
             analysis_nlp_dict = {}
             if add_nlp == 2:
                 analysis_nlp_dict = ts.analyseArticle(text)
@@ -174,7 +167,7 @@ def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_
     # stat_field_selection = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
     stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list","summary", "text_len","valid"]
     stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", "publish_date", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
-    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","nlp_error","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
+    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
     if add_nlp == 0 :
         stat_field = stat_field_selection0
     if add_nlp == 1 :
@@ -189,8 +182,7 @@ def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_
     for url_entry in df_input_url:
         
         ar_list = readStatsFromURL(url_entry,save_articles,display_df,art_count,add_nlp)
-        # print(ar_list.keys())
-        # print(df.dtypes)
+        ar_list["publish_date"] = "ccc"
         df = addDictToDF(df,ar_list)
         art_count = art_count + 1
         # if display_df :
@@ -211,7 +203,7 @@ def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_
         saveDFcsv(df, save_path, filename_out,True) # , mode="w"
         print("Final file saved here :",save_path)
     if display_df :
-        display_df(df)
+        display(df)
     return df
 
 def fillDFwithListList(df, ar_list):
@@ -223,9 +215,10 @@ def fillDFwithListList(df, ar_list):
     return df
 
 def addDictToDF(df, ar_dict):
-    df_add = pd.DataFrame([ar_dict], columns = ar_dict.keys()).reset_index(drop=False)#.reset_index(inplace=True, drop=True)
+    df_add = pd.DataFrame([ar_dict], columns = ar_dict.keys())#.reset_index(drop=False)#.reset_index(inplace=True, drop=True)
     # df = df.reset_index(inplace=True, drop=True)
-    df = pd.concat([df,df_add])#.reset_index(drop=False)#.reset_index(inplace=True, drop=True)#
+    if type(df_add) != type(None) and type(df) != type(None) :
+        df = pd.concat([df,df_add])#.reset_index(drop=False)#.reset_index(inplace=True, drop=True)#
     return df
 
 def articleDictToFile(ar_dict, path) :  #requires pk & text

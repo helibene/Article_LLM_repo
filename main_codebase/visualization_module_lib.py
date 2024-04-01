@@ -169,12 +169,7 @@ def plot2D(df,conf_dict={}) : # Scatter
             # widgets.IntSlider()
     return fig
 
-# def linegraph(df) :
-#     # df = px.data.gapminder().query("country=='Canada'")
-#     fig = px.line(df, x='year', y='words', color='category')#_month , symbol="url_TLD"_mont
-#     fig.show()
-# #     fig = px.line(df, x="year_month", title='TEST',color='category')
-# #     fig.show()
+
 def plot3D(df,conf_dict={}) :
     fig = px.scatter_3d(df, x=conf_dict["x"], y=conf_dict["y"], z=conf_dict["z"], color=conf_dict["c"],size=conf_dict["size"],
         symbol=conf_dict["symbol"],text=conf_dict["text"],
@@ -228,17 +223,7 @@ def testDimReduct(df,i) :
     df_nnt = dimReduction_NNT(df)
     plot2Dpandas(df_nnt,title="NNT (Nearest Neighbors Transformer)",save=True,path=folder_path_graph+"IPCA_",savecount=i)
 
-def addVisuColumns(df) :
-    if "url_TLD" in df.columns :
-        df["bool_url"] = np.where(df['url_TLD'] == "com", True, False)
-        #df["bool_url"] = df["url_TLD"] == "com"
-    df["bool_tb_pos"] = np.where(df['tb.pos'] > df['tb.neg'], "y", "n")
-    df["bool_vs_pos"] = np.where(df['vs.pos'] > df['vs.neg'], "y", "n")
-    df["bool_ts_pos"] = np.where(df['ts.pos'] > df['ts.neg'], "y", "n")
-    df["bool_vs_neu"] = np.where(df['vs.neu'] > 0, "y", "n")
-    df["bool_vs_comp"] = np.where(df['vs.comp'] > 0, "y", "n")
-    df['bool_sent_all'] = df[["bool_tb_pos","bool_vs_pos","bool_ts_pos","bool_vs_neu","bool_vs_comp"]].agg(''.join, axis=1)
-    return df
+
 
 def update_point(trace, points, selector):
     c = list(scatter.marker.color)
@@ -250,8 +235,13 @@ def update_point(trace, points, selector):
             scatter.marker.color = c
             scatter.marker.size = s
 
-def getRenderLists(experimental=True,basic=True,test=False) :
-    standardDict = {"x":1,"y":2,"z":3,"c":"category","size":"words","h_name":"source_title","c_data":["title_quer"],
+def getRenderLists(experimental=True,basic=True,test=True) :
+    # standardDict = {"x":1,"y":2,"z":3,"c":"category","size":"words","h_name":"source_title","c_data":["title_quer"],
+    #                 "c_data":None,"browser":True,'facet_r':None,"facet_c":None,"facet_rs":0.02,"facet_cs":0.02,
+    #                 "animation_frame":None,"animation_group":None,"marginal_x":MARGINAL_LIST[0],"marginal_y":MARGINAL_LIST[0],
+    #                 "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":30,"opacity":0.85}
+
+    standardDict = {"x":1,"y":2,"z":3,"c":"category","size":"tb.word","h_name":"source_title","c_data":["title_quer"],
                     "c_data":None,"browser":True,'facet_r':None,"facet_c":None,"facet_rs":0.02,"facet_cs":0.02,
                     "animation_frame":None,"animation_group":None,"marginal_x":MARGINAL_LIST[0],"marginal_y":MARGINAL_LIST[0],
                     "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":30,"opacity":0.85}
@@ -267,13 +257,13 @@ def getRenderLists(experimental=True,basic=True,test=False) :
     _3d_embd_basic = standardDict|{"x":0,"y":1, 'z':2,'c':"category","title":"Scatter plot of dimention reduced embeding data from articles","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3"}
     _2d_sent_basic = standardDict|{"x":"tb.polaj","y":"tb.sub",'c':"category","title":"Scatter plot of the 'polarity' and 'objectivity' of article data","xtitle":"Polarity (0-1)","ytitle":"Subjectivity (0-1)","marginal_x":MARGINAL_LIST[3],"marginal_y":MARGINAL_LIST[4]}
     _3d_sent_basic = standardDict|{"x":"tb.polaj","y":"tb.sub","z":"ts.pos",'c':"category","title":"Scatter plot of the 'polarity', 'objectivity' and 'positivity' of article data","xtitle":"Polarity (0-1)","ytitle":"Subjectivity (0-1)","ztitle":"Positivity (0-1)"}
-    _2d_len_basic = standardDict|{"x":"sentences","y":"noun_phrases",'c':"category","title":"Scatter plot of text nature and volume data from articles","xtitle":"Number of Sentences","ytitle":"Number of Nouns"}
-    _3d_len_basic = standardDict|{"x":"sentences","y":"noun_phrases", 'z':"words",'c':"category","title":"Scatter plot of text nature and volume data from articles","xtitle":"Number of Sentences","ytitle":"Number of Nouns","ztitle":"Number of Words"}
+    _2d_len_basic = standardDict|{"x":"tb.sent","y":"tb.noun",'c':"category","title":"Scatter plot of text nature and volume data from articles","xtitle":"Number of Sentences","ytitle":"Number of Nouns"}
+    _3d_len_basic = standardDict|{"x":"tb.sent","y":"tb.noun", 'z':"tb.word",'c':"category","title":"Scatter plot of text nature and volume data from articles","xtitle":"Number of Sentences","ytitle":"Number of Nouns","ztitle":"Number of Words"}
     _2dList_basic = [_2d_embd_basic ,_2d_sent_basic ,_2d_len_basic]
     _3dList_basic = [_3d_embd_basic ,_3d_sent_basic, _3d_len_basic]
     
-    _2d_embd_test = standardDict|{"x":0,"y":1,'c':"bool_sent_all","title":"Scatter plot of dimention reduced embeding data from articles","xtitle":"Component 1","ytitle":"Component 2"}
-    _3d_embd_test = standardDict|{"x":0,"y":1,"z":2,'c':"bool_sent_all","title":"Scatter plot of dimention reduced embeding data from articles","xtitle":"Component 1","ytitle":"Component 2"}
+    _2d_embd_test = standardDict|{"x":0,"y":1,'c':"category","title":"Scatter plot of dimention reduced embeding data from articles","xtitle":"Component 1","ytitle":"Component 2"}
+    _3d_embd_test = standardDict|{"x":0,"y":1,"z":2,'c':"category","title":"Scatter plot of dimention reduced embeding data from articles","xtitle":"Component 1","ytitle":"Component 2"}
     
     _2dList_test = [_2d_embd_test]
     _3dList_test = [_3d_embd_test]
@@ -324,3 +314,10 @@ def plotSave(plot,path,filename) :
     # render_mode = PLOT_RENDER
     # size_max = 30
     # opacity=0.9
+    
+# def linegraph(df) :
+#     # df = px.data.gapminder().query("country=='Canada'")
+#     fig = px.line(df, x='year', y='words', color='category')#_month , symbol="url_TLD"_mont
+#     fig.show()
+# #     fig = px.line(df, x="year_month", title='TEST',color='category')
+# #     fig.show()

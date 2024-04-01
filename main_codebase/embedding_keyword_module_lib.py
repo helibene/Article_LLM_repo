@@ -170,8 +170,8 @@ def df_setup(par_list) :
     df["0"] = df["0"].astype(str)
     df['word_combined'] = df[[str(i) for i in range(col_count)]].agg(' '.join, axis=1)
     #df['word_combined'].replace(" #","", inplace=True)
-    display_df(df)
-    print(df[["word_count"]].describe())
+    # display_df(df)
+    # print(df[["word_count"]].describe())
     return df
 
 
@@ -182,14 +182,13 @@ def genrateKeywordExtract(df_main, entry_limit=10, common_word_max = 10, column_
     df = df_setup(par_list)
     par_list = flattenMatrix(par_list)
     out = getMostCommunKeywords(par_list,common_word_max)
-    print(out)
+    # print(out)
     out = set(out)
     row_list = []
     for i in range(entry_limit) :
         row_list.append(list(out & set(df.loc[i, :].values.flatten().tolist())))
     df_min = df_setup(row_list)
     df = df.join(df_min, how="inner", lsuffix='_f', rsuffix='_s')
-    print(df.dtypes)
     #df["word_combined_f"].replace(" @","")
     #df["word_combined_s"].replace(" @","")
     #df['word_combined_s'] = df['word_combined_s'].str.replace(' @','')
@@ -198,10 +197,10 @@ def genrateKeywordExtract(df_main, entry_limit=10, common_word_max = 10, column_
     df['word_combined_s'] = df['word_combined_s'].str.replace(r'\s+', ' ', regex=True)
     return df
 
-def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True,display_res=True):
+def generateNLPonKeywords(df_main,index_from=0,index_to=500,nlp_source_col="word_combined_all",display_log=True,display_res=True):
     if index_to == -1 :
         index_to = df_main.shape[0]
-    df_np = df_main["word_combined_all"].apply(np.array).to_numpy()[0:index_to]
+    df_np = df_main[nlp_source_col].apply(np.array).to_numpy()[0:index_to]
     df_hash = df_main["hash_key"].apply(np.array).to_numpy()[0:index_to]
     mat_index = []
     for i in range(index_from,index_to) :
@@ -222,10 +221,13 @@ def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True,dis
         display_df(df_out.head(3))
     return df_out
 
-def mainKeywordWF(entry_limit=9999999,common_word_max=500) :
+def mainKeywordWF(entry_limit=9999999,common_word_max=500,add_nlp_stats=True,nlp_source_col="word_combined_all") :
     df_main = openDFcsv(join1_path,join1_filename)
+    df_main = df_main[["hash_key","title_quer","keywords_list"]]
     df1 = genrateKeywordExtract(df_main,entry_limit,common_word_max,"title_quer",True)
     df2 = genrateKeywordExtract(df_main,entry_limit,common_word_max,"keywords_list",False)
+    print(df1.dtypes)
+    print("stop")
     df = df1.join(df2, how="inner", lsuffix='_t', rsuffix='_k')
     #df = df[["0_f_t","1_f_t","3_f_t","word_count_f_t","word_combined_f_t","0_f_k","1_f_k","3_f_k","word_count_f_k","word_combined_f_k","0_s_t","1_s_t","3_s_t","word_count_s_t","word_combined_s_t","0_s_k","1_s_k","3_s_k","word_count_s_k","word_combined_s_k"]]
     df = df[["word_count_f_t","word_combined_f_t","word_count_f_k","word_combined_f_k","word_count_s_t","word_combined_s_t","word_count_s_k","word_combined_s_k"]]#,"0_s_k","0_s_t"]]
@@ -233,10 +235,18 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500) :
     df['word_count_all'] = df["word_count_f_t"]+df["word_count_f_k"]
     df['word_combined_all_sel'] = df[["word_combined_s_t","word_combined_s_k"]].agg(' '.join, axis=1)
     df['word_count_all_sel'] = df["word_count_s_t"]+df["word_count_s_k"]
-    print(df.columns)
+    #df = df_main.join(df, how="inner", rsuffix='_new')  
+    # df = df_main.join(df, how="inner", rsuffix='_new1')  
     df = df_main.join(df, how="inner")
+    if add_nlp_stats :
+        df = generateNLPonKeywords(df,0,df.shape[0],nlp_source_col,True,True)
+    # df = df_main.join(df, how="inner", rsuffix='_new2')
     df = deleteUnnamed(df,"hash_key")
     saveDFcsv(df, keyword_path, keyword_filename,True)
     return df
 
 print("IMPORT : embedding_keyword_module_lib")
+# df_keyword = mainKeywordWF(entry_limit=1000,
+#               common_word_max=700,
+#               add_nlp_stats=True,
+#               nlp_source_col="word_combined_all")

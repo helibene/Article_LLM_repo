@@ -10,7 +10,7 @@ from pygooglenews import GoogleNews
 import pandas as pd
 from dateparser import parse as parse_date
 import matplotlib.pyplot as plt
-from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,deleteUnnamed,display_df
+from utils_art import *
 import hashlib
 import os
 import embedding_keyword_module_lib as ekml
@@ -20,6 +20,8 @@ pd.set_option('expand_frame_repr', False)
 
 _TOPIC_LIST = ["TOP","WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"] #"CAAqJQgKIh9DQkFTRVFvSUwyMHZNR3QwTlRFU0JXVnVMVWRDS0FBUAE"
 _STANDARD_SCRAPPING_FIELDS = ["title","link", "published", "source_url", "source_title", "category", "year", "year_month","pk","url_list","url_TLD", "hash_key"]
+#_STANDARD_SCRAPPING_FIELDS = ["hash_key","title", "category"]
+#_STANDARD_SCRAPPING_FIELDS = ["hash_key","title","category","source_title","source_url","is_https","url_list","url_tld","published_date","published_date_str","published_date_int","published_time_raw","published_time_struct","published_year","published_year_month","link","guidislink","num_sub_article","num_links","language_title","language_summary","source_in_title","id"]
 
 log_filename = "log"
 language = "en"
@@ -90,7 +92,7 @@ def rawHeadListToListList(rawHeadList, category="n/a") :
         pk = entry["link"].split("articles/")[1].replace("?oc=5","")
         hash_key = hashlib.shake_256(str(pk).encode()).hexdigest(20)
         
-        list_for_entry.append(entry["title"]) # "title"
+        list_for_entry.append(str(entry["title"])) # "title"
         list_for_entry.append(entry["link"]) # "link"
         list_for_entry.append(published_date) # "published"
         list_for_entry.append(entry["source"]["href"]) # "source_url"
@@ -107,6 +109,83 @@ def rawHeadListToListList(rawHeadList, category="n/a") :
         
     return list_list_output
 
+def rawHeadListToDictList(rawHeadList, category="n/a") :
+    field_list = _STANDARD_SCRAPPING_FIELDS
+    dict_list_output = []
+    for a_dict_in in rawHeadList :
+        a_dict_out = {}
+        
+        # Link
+        website_https = True
+        true_link = a_dict_in["source"]["href"]
+        if "https" not in true_link :
+            website_https = False
+        link_str_list = true_link.split(".")
+        link_str_list[0] = link_str_list[0].replace("https://","").replace("http://","").replace("www","")
+        url_comp_list = link_str_list[:-1]
+        url_tld = link_str_list[-1]
+        source_in_title = False
+        if str(a_dict_in["source"]["title"]) in a_dict_in["title"] :
+            source_in_title = True
+        
+        hash_key = hashlib.shake_256(str(a_dict_in["id"]).encode()).hexdigest(20)
+        
+        published_date = parse_date(a_dict_in["published"]).date()
+        published_year = published_date.year
+        published_year_month = str(published_date.strftime('%Y-%m'))
+        published_str = str(published_date.strftime('%Y-%m-%d'))
+        published_int = int(published_date.strftime('%Y%m%d'))
+        
+        if "hash_key" in field_list :
+            a_dict_out["hash_key"] = hash_key
+        if "title" in field_list :
+            a_dict_out["title"] = a_dict_in["title"]
+        if "category" in field_list :
+            a_dict_out["category"] = category
+        if "source_title" in field_list :
+            a_dict_out["source_title"] = a_dict_in["source"]["title"]
+        if "source_url" in field_list :
+            a_dict_out["source_url"] = true_link
+        if "is_https" in field_list :
+            a_dict_out["is_https"] = website_https
+        if "url_list" in field_list :
+            a_dict_out["url_list"] = url_comp_list
+        if "url_tld" in field_list :
+            a_dict_out["url_tld"] = url_tld
+        if "published_date" in field_list :
+            a_dict_out["published_date"] = published_date
+        if "published_date_str" in field_list :
+            a_dict_out["published_date_str"] = published_str
+        if "published_date_int" in field_list :
+            a_dict_out["published_date_int"] = published_int
+        if "published_time_raw" in field_list :
+            a_dict_out["published_time_raw"] = a_dict_in["published"]
+        if "published_time_struct" in field_list :
+            a_dict_out["published_time_struct"] = a_dict_in["published_parsed"]
+        if "published_year" in field_list :
+            a_dict_out["published_year"] = published_year
+        if "published_year_month" in field_list :
+            a_dict_out["published_year_month"] = published_year_month
+        if "link" in field_list :
+            a_dict_out["link"] = a_dict_in["link"]
+        if "guidislink" in field_list :
+            a_dict_out["guidislink"] = a_dict_in["guidislink"]
+        if "num_sub_article" in field_list :
+            a_dict_out["num_sub_article"] = len(a_dict_in["sub_articles"])
+        if "num_links" in field_list :
+            a_dict_out["num_links"] = len(a_dict_in["links"])
+        if "language_title" in field_list :
+            a_dict_out["language_title"] = a_dict_in["title_detail"]["language"]
+        if "language_summary" in field_list :
+            a_dict_out["language_summary"] = a_dict_in["summary_detail"]["language"]
+        if "source_in_title" in field_list :
+            a_dict_out["source_in_title"] = source_in_title
+        if "id" in field_list :
+            a_dict_out["id"] = a_dict_in["id"]
+        dict_list_output.append(a_dict_out)
+    return dict_list_output
+    
+
 def fillDFwithListList(df, ListList):
     for ent in ListList:
         df.loc[len(df)] = ent
@@ -115,6 +194,7 @@ def fillDFwithListList(df, ListList):
 def fullWorkflow(gn, df, search = False, topic_sel=1, date1 = '2015-01-01', date2 = '2016-01-01') :
     headlines_raw = getHeadlindTopic(gn, search, topic_sel, date1, date2)
     headlinesMat = rawHeadListToListList(headlines_raw, _TOPIC_LIST[topic_sel])
+    # headlinesMat = rawHeadListToDictList(headlines_raw, _TOPIC_LIST[topic_sel])
     df_out = fillDFwithListList(df, headlinesMat)
     return df_out, len(headlinesMat)
 
@@ -234,22 +314,26 @@ def log(string, print_str=True, log_str=True):
 ################################## STATS CALC
 
 def calculateStatsLength(df,groupping,display_df=True):
-    rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}
+    #rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}
+    rename_dict = {"tb.char":"char_n","tb.sent":"sentence_n","tb.noun":"noun_n","tb.word":"words_n"}
     df = df.rename(columns=rename_dict)
-    df_group = df[[groupping,"char_n","sentence_n","noun_n","words_n"]].groupby(groupping).sum(["char_n","sentence_n","noun_n","words_n"])
+    list_of_len_fields=list(rename_dict.values())
+    # df_group = df[[groupping,"char_n","sentence_n","noun_n","words_n"]].groupby(groupping).sum(["char_n","sentence_n","noun_n","words_n"])
+    df_group = df[[groupping]+list_of_len_fields].groupby(groupping).sum(list_of_len_fields)
     df_count = df[groupping].value_counts().to_frame("count")#
     df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
-    df_main[["char_per_count","sentence_per_count","noun_per_count","word_per_count"]] = df_main[["char_n","sentence_n","noun_n","words_n"]].div(df_main['count'], axis=0).astype(float)
+    df_main[["char_per_count","sentence_per_count","noun_per_count","word_per_count"]] = df_main[list_of_len_fields].div(df_main['count'], axis=0).astype(float)
     df_main[["char_per_sentence","noun_per_sentence","word_per_sentence"]] = df_main[["char_n","noun_n","words_n"]].div(df_main["sentence_n"], axis=0).astype(float)
     df_main[["char_per_word"]] = df_main[["char_n"]].div(df_main["words_n"], axis=0).astype(float)
     df_main = df_main.sort_values(by=["count"],ascending=True)
     if display_df :
         print("Dataframe Statistics Length Column :'"+groupping+"'")
-        pd.display(df_main)
+        display(df_main)
     return df_main
 
 def calculateStatsNLP(df,groupping,display_df=True,display_stats=False,out_raw=False):
-    rename_dict = {"polarity":"Polarity","subjectivity":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
+    # rename_dict = {"tb.pol":"Polarity","tb.sub":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
+    rename_dict = {"tb.polaj":"polarity","tb.sub":"subjectivity","al.pos":"positivity","al.neg":"negativity"}
     df = df.rename(columns=rename_dict)
     column_list = list(rename_dict.values())
     column_list_ajusted = []
@@ -269,10 +353,11 @@ def calculateStatsNLP(df,groupping,display_df=True,display_stats=False,out_raw=F
         for field in column_list :
             list_field_count.append(field+"_per_count")
         df_main[list_field_count] = df_main[column_list].div(df_main['count'], axis=0).astype(float)
-        df_main = df_main.sort_values(by=["count"],ascending=True)
+        # df_main = df_main.sort_values(by=["count"],ascending=True)
+        df_main = df_main.sort_values(by=[groupping],ascending=True)
     if display_df :
         print("Dataframe Statistics NLP Column :'"+groupping+"'")
-        pd.display(df_main)
+        display(df_main)
     return df_main
 
 def getStatsFromCol(df, column) :
@@ -294,32 +379,6 @@ def calculateStatsColList(df, column_list=[],stat_type="len",display_df=True,dis
 
 ################################## UTILS ?
 
-def loadFromFolder(folder_path="",force_schema=[],save=False, unicity_key="hash_key",cast_date_col="published"):
-    if folder_path == "" :
-        folder_path = main_path
-    root_path = os.Path(folder_path)
-    file_list = os.listdir(root_path)
-    first_flag = True
-    for filename_entry in file_list:
-        if ".csv" in filename_entry :
-            df = openDFcsv(folder_path,filename_entry.replace(".csv",""))
-            if first_flag :
-                first_flag = False
-                df_out = df
-            else :
-                df_out = pd.concat([df_out, df], ignore_index=True)
-    if "Unnamed: 0" in list(df_out.columns) :
-        df_out = df_out.rename(columns={"Unnamed: 0":"index"})
-    if force_schema!=[] :
-        df_out = df_out[force_schema]
-    if unicity_key != "" and unicity_key in list(df_out.columns) :
-        df_out = df_out.drop_duplicates(subset=['hash_key'])
-    if cast_date_col != "" and cast_date_col in list(df_out.columns) :
-        df_out[cast_date_col+"_date_type"] = pd.to_datetime(df_out[cast_date_col])
-    if save :
-        df_out = df_out.set_index('hash_key')
-        saveDFcsv(df_out, folder_path, filename+"_all_aggregated")
-    return df_out
 
 def generateDateList(startDate='2015-01-01', endDate='2020-01-01', sampling=10, includeEnd=True):
     date_list = []
@@ -372,45 +431,7 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
     
 ################################## MAIN JOINS
 
-def joinQuerryAndParse(save=True,remove_invalid=True,display=True,filtered_input_df=False) :
-    # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"tb.sentences","tb.noun_phrases":"tb.noun_phrases","tb.words":"tb.words","tb.polarity":"tb.polarity","tb.subjectivity":"tb.subjectivity","tb.p_pos":"tb.p_pos","tb.p_neg":"tb.p_neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.compound","valid":"valid","link_q":"link","pk_q":"pk",}
-    # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"sentences","tb.noun_phrases":"noun_phrases","tb.words":"words","tb.polarity":"polarity","tb.subjectivity":"subjectivity","tb.p_pos":"tb.pos","tb.p_neg":"tb.neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.comp","valid":"valid","link_q":"link","pk_q":"pk"}
-    rename_dict = {"pk_q":"pk"}
-    df_q = openDFcsv(main_path,filename)
-    df_q = deleteUnnamed(df_q,"hash_key")
-    df_q_len = df_q.shape[0]
-    if display :
-        print("QUERRY dataset loaded from ",main_path)
-        print("QUERRY dataset has entry length of :",df_q_len,"\n")
-    df_p = openDFcsv(scarp_path,scarp_filename)
-    df_p = deleteUnnamed(df_p,"hash_key")
-    df_p_len = df_p.shape[0]
-    if display :
-        print("PARSSING dataset loaded from ",scarp_path)
-        print("PARSSING dataset has entry length of :",df_p_len," ("+calculatePct(df_p_len,df_q_len)+"% of querry data)\n")
-    df = df_q.join(df_p, how="inner",on='hash_key', lsuffix='_q', rsuffix='_p')
-    df = df.rename(columns=rename_dict)
-    df = df.drop_duplicates(subset=['pk'])
-    # df = df.set_index('hash_key')
-    # df = df[list(rename_dict.values())]
-    join_df_len = df.shape[0]
-    if display :
-        print("JOINED dataset has entry length of :",join_df_len," ("+calculatePct(join_df_len,df_p_len)+"% of parssing data)")
-    if remove_invalid :
-        df = df.loc[(df['valid'] == True)]
-        join_df_valid_len = df.shape[0]
-        if display :
-            print("JOINED dataset VALID entries :",join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len)+"% of joined data)")
-            print("JOINED dataset INVALID entries :",join_df_len-join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len,ajust_for_denom=1)+"% of joined data)\n")
-        join_df_len = join_df_valid_len
-    if display :
-        print("TOTAL yield : from",df_q_len," to ",join_df_len,"("+calculatePct(join_df_len,df_q_len)+"% yeald)\n")
-    if save :
-        # df = deleteUnnamed(df,"hash_key")
-        saveDFcsv(df,join1_path,join1_filename)
-        if display :
-            print("JOINED dataset saved here :",join1_path+join1_filename+".csv")
-    return df
+
 
 
 
@@ -492,27 +513,7 @@ def displayDFsourceLoss(label=" - LOSS -      ",entry_ct_list=[],unique_ct_list=
                  "Unique/Sum":calculateRatio(entry_ct_list[0],unique_ct_list[0]) + " -> " + calculateRatio(entry_ct_list[1],unique_ct_list[1])})
     # return num_entry, num_unique
     
-def calculateRatio(n1,n2,stringReturn=True,round_num=2) :
-    our_num = round(float(n1)/max(float(n2),1),round_num)
-    if stringReturn :
-        if n2 != 0 :
-            return str(our_num)
-        else :
-            "error_div_0"
-    else :
-        return float(our_num)
-     
 
-def calculatePct(n1,n2,stringReturn=True,round_num=2,ajust_for_denom=0) :
-    our_num = round((100*(-(float(n2)*ajust_for_denom)+float(n1)))/max(float(n2),1),round_num)
-    if stringReturn :
-        if n2 != 0 :
-            return str(our_num)
-        else :
-            "error_div_0"
-    else :
-        return float(our_num)
-    
     
 def mainJoinOut() :
     df = openDFcsv(keyword_path,keyword_filename)
@@ -522,3 +523,7 @@ def mainJoinOut() :
     return df_out
     
 print("IMPORT : article_scraping_lib")
+
+# df = getStandardDf(_STANDARD_SCRAPPING_FIELDS)
+# df2 = fullWorkflow(gn,df,True)
+# display(df2)

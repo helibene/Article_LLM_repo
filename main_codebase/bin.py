@@ -6,6 +6,55 @@ Created on Sat Mar 30 00:05:32 2024
 """
 
 
+# def loadFromFolder(folder_path="",force_schema=[],save=False, unicity_key="hash_key",cast_date_col="published"):
+#     if folder_path == "" :
+#         folder_path = main_path
+#     root_path = os.Path(folder_path)
+#     file_list = os.listdir(root_path)
+#     first_flag = True
+#     for filename_entry in file_list:
+#         if ".csv" in filename_entry :
+#             df = openDFcsv(folder_path,filename_entry.replace(".csv",""))
+#             if first_flag :
+#                 first_flag = False
+#                 df_out = df
+#             else :
+#                 df_out = pd.concat([df_out, df], ignore_index=True)
+#     if "Unnamed: 0" in list(df_out.columns) :
+#         df_out = df_out.rename(columns={"Unnamed: 0":"index"})
+#     if force_schema!=[] :
+#         df_out = df_out[force_schema]
+#     if unicity_key != "" and unicity_key in list(df_out.columns) :
+#         df_out = df_out.drop_duplicates(subset=['hash_key'])
+#     if cast_date_col != "" and cast_date_col in list(df_out.columns) :
+#         df_out[cast_date_col+"_date_type"] = pd.to_datetime(df_out[cast_date_col])
+#     if save :
+#         df_out = df_out.set_index('hash_key')
+#         saveDFcsv(df_out, folder_path, filename+"_all_aggregated")
+#     return df_out
+
+
+# #M1
+# df = loadFromFolder(path_union_stat) #
+# col_list = ["category","source_title","year_month","url_TLD","year"]
+# df_list = calculateStatsColList(df,col_list,"len",display_df=True)
+# df_list = calculateStatsColList(df,col_list,"nlp",display_df=True,display_stats=False) #,out_raw=False
+
+# #M2
+# df_pol = df[["subjectivity"]].round(2).value_counts().to_frame("count").sort_values(by=['subjectivity'],ascending=True)
+# df_pol.plot.barh(y='count',use_index=True, rot=0, figsize=(7, 30), title="Words Cnt") # , logx=True
+
+# #M3
+# source_list = ["The New York Times","The Nation","Business Insider","Business Insider"]
+# out_df = selectOnDf(df,source_list=source_list)
+# display(out_df)
+
+# #M4
+# plotDFstatisticsQuerry(df)
+
+# #M5
+# displayStats(df)
+# #saveDFcsv(out_df, "C:/Users/User/OneDrive/Desktop/article/file_2/.bin/", "viz_test3")
 
 """IMPORTS"""
 # import json
@@ -308,7 +357,31 @@ Created on Sat Mar 30 00:05:32 2024
 #         saveDFcsv(df,llm_join_out,llm_join_out_filename)
 #     return df
 
-
+# 'title'
+# 'title_detail'
+#     'type'
+#     'language'
+#     'base'
+#     'value'
+# 'link'
+# 'links' (list)
+#     'rel'
+#     'type'
+#     'href'
+# 'id'
+# 'guidislink'
+# 'published'
+# 'published_parsed'
+# 'summary'
+# 'summary_detail'
+#     'type'
+#     'language'
+#     'base'
+#     'value'
+# 'source'
+#     'href'
+#     'title'
+# 'sub_articles' (list)
 
 
 """ARTICLE_PARSING"""
@@ -382,6 +455,52 @@ Created on Sat Mar 30 00:05:32 2024
 # test_list = ['Fuck you', 'file', 'advantages', 'things', 'know', 'right', 'cofounder', 'think', 'competitive', 'aesthetics', 'adobe', 'postscript', 'going', 'wanted', 'john', 'wharton', 'warnock', 'point']
 # test_list = ['youre', 'united', 'sea', 'role', 'safer', 'risk', 'technology', 'dangerous', 'drivers', 'jobs', 'risks']
 
+    # def analyseText(self, text) :
+    #     dict_out = {}
+    #     textblob = TextBlob(text)
+    #     textblob_nba = TextBlob(text, analyzer=self.tb_NaiveBayes)
+    #     textblob_pa = TextBlob(text, analyzer=self.tb_PatternAnalyzer)
+        
+    #     vs = self.vs_analyzer.polarity_scores(text)
+    #     vs = dict(vs)
+        
+    #     sp = self.tf_sentiment_pipeline(text)
+    #     #print(textblob.sentences)
+    #     dict_out["tb.sentences"] = len(textblob.sentences)
+    #     dict_out["tb.noun_phrases"] = len(textblob.noun_phrases)
+    #     dict_out["tb.words"] = len(textblob.words)
+        
+    #     tb_pola = textblob_pa.sentiment.polarity
+    #     tb_sub = textblob_pa.sentiment.subjectivity
+    #     dict_out["tb.polarity"] = tb_pola # [-1.0, 1.0].
+    #     dict_out["tb.subjectivity"] = tb_sub #[0.0, 1.0]
+    #     dict_out["tb.subjectivity_aj"] = (tb_pola+1)/2 #[0.0, 1.0]
+    #     if tb_sub == 0 :
+    #         dict_out["tb.pol_div_sub"] = 1
+    #     else :
+    #         dict_out["tb.pol_div_sub"] = ((tb_pola+1)/2)/tb_sub #[0.0, 1.0]
+    #     if tb_pola == -1 :
+    #         dict_out["tb.sub_div_pol"] = 1
+    #     else :
+    #         dict_out["tb.sub_div_pol"] = tb_sub/((tb_pola+1)/2) #[0.0, 1.0]
+        
+    #     tp_pos = textblob_nba.sentiment.p_pos
+    #     tp_neg = textblob_nba.sentiment.p_neg
+    #     dict_out["tb.p_pos"] = tp_pos/(tp_pos+tp_neg)
+    #     dict_out["tb.p_neg"] = tp_neg/(tp_pos+tp_neg)
+    #     dict_out["tb.p_class"] = bool(tp_neg<tp_pos)
+    
+        
+    #     dict_out["vs.neg"] = vs["neg"]
+    #     dict_out["vs.neu"] = vs["neu"]
+    #     dict_out["vs.pos"] = vs["pos"]
+    #     dict_out["vs.compound"] = vs["compound"]
+    #     dict_out["vs.p_class"] = bool(vs["neg"]<vs["pos"])
+        
+    #     dict_out["ts.neg"] = sp[0][0]['score']
+    #     dict_out["ts.pos"] = sp[0][1]['score']
+    #     dict_out["ts.class"] = bool(dict_out["ts.neg"] <dict_out["ts.pos"])
+    #     return dict_out
 
 """EMBD_KEYWD"""
 
@@ -399,4 +518,84 @@ Created on Sat Mar 30 00:05:32 2024
 # #                 word_list.append(string2)
 # #     return word_list
 
+"""VISU"""
+# def addVisuColumns(df) :
+#     if "url_TLD" in df.columns :
+#         df["bool_url"] = np.where(df['url_TLD'] == "com", True, False)
+#         #df["bool_url"] = df["url_TLD"] == "com"
+#     df["bool_tb_pos"] = np.where(df['tb.pos'] > df['tb.neg'], "y", "n")
+#     df["bool_vs_pos"] = np.where(df['vs.pos'] > df['vs.neg'], "y", "n")
+#     df["bool_ts_pos"] = np.where(df['ts.pos'] > df['ts.neg'], "y", "n")
+#     df["bool_vs_neu"] = np.where(df['vs.neu'] > 0, "y", "n")
+#     df["bool_vs_comp"] = np.where(df['vs.comp'] > 0, "y", "n")
+#     df['bool_sent_all'] = df[["bool_tb_pos","bool_vs_pos","bool_ts_pos","bool_vs_neu","bool_vs_comp"]].agg(''.join, axis=1)
+#     return df
 
+
+
+# def calculateRatio(n1,n2,stringReturn=True,round_num=2) :
+#     our_num = round(float(n1)/max(float(n2),1),round_num)
+#     if stringReturn :
+#         if n2 != 0 :
+#             return str(our_num)
+#         else :
+#             "error_div_0"
+#     else :
+#         return float(our_num)
+     
+
+# def calculatePct(n1,n2,stringReturn=True,round_num=2,ajust_for_denom=0) :
+#     our_num = round((100*(-(float(n2)*ajust_for_denom)+float(n1)))/max(float(n2),1),round_num)
+#     if stringReturn :
+#         if n2 != 0 :
+#             return str(our_num)
+#         else :
+#             "error_div_0"
+#     else :
+#         return float(our_num)
+    
+
+# def joinQuerryAndParse(save=True,remove_invalid=True,display=True,filtered_input_df=False) :
+#     # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"tb.sentences","tb.noun_phrases":"tb.noun_phrases","tb.words":"tb.words","tb.polarity":"tb.polarity","tb.subjectivity":"tb.subjectivity","tb.p_pos":"tb.p_pos","tb.p_neg":"tb.p_neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.compound","valid":"valid","link_q":"link","pk_q":"pk",}
+#     # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"sentences","tb.noun_phrases":"noun_phrases","tb.words":"words","tb.polarity":"polarity","tb.subjectivity":"subjectivity","tb.p_pos":"tb.pos","tb.p_neg":"tb.neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.comp","valid":"valid","link_q":"link","pk_q":"pk"}
+#     #rename_dict = {"pk_q":"pk"}
+#     rename_dict = {"title_q":"title_quer","title_p":"title_par","pk_q":"pk"}
+#     del_col_list = ["pk_p"]
+#     df_q = openDFcsv(main_path,filename)
+#     df_q = deleteUnnamed(df_q,"hash_key")
+#     df_q_len = df_q.shape[0]
+#     if display :
+#         print("QUERRY dataset loaded from ",main_path)
+#         print("QUERRY dataset has entry length of :",df_q_len,"\n")
+#     df_p = openDFcsv(scarp_path,scarp_filename)
+#     df_p = deleteUnnamed(df_p,"hash_key")
+#     df_p_len = df_p.shape[0]
+#     if display :
+#         print("PARSSING dataset loaded from ",scarp_path)
+#         print("PARSSING dataset has entry length of :",df_p_len," ("+calculatePct(df_p_len,df_q_len)+"% of querry data)\n")
+#     df = df_q.join(df_p, how="inner",on='hash_key', lsuffix='_q', rsuffix='_p')
+#     df = df.rename(columns=rename_dict)
+#     df = df.drop_duplicates(subset=['pk'])
+#     for col in del_col_list :
+#         if col in list(df.columns) :
+#             del df[col]
+#     # df = df.set_index('hash_key')
+#     # df = df[list(rename_dict.values())]
+#     join_df_len = df.shape[0]
+#     if display :
+#         print("JOINED dataset has entry length of :",join_df_len," ("+calculatePct(join_df_len,df_p_len)+"% of parssing data)")
+#     if remove_invalid :
+#         df = df.loc[(df['valid'] == True)]
+#         join_df_valid_len = df.shape[0]
+#         if display :
+#             print("JOINED dataset VALID entries :",join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len)+"% of joined data)")
+#             print("JOINED dataset INVALID entries :",join_df_len-join_df_valid_len," ("+calculatePct(join_df_valid_len,join_df_len,ajust_for_denom=1)+"% of joined data)\n")
+#         join_df_len = join_df_valid_len
+#     if display :
+#         print("TOTAL yield : from",df_q_len," to ",join_df_len,"("+calculatePct(join_df_len,df_q_len)+"% yeald)\n")
+#     if save :
+#         # df = deleteUnnamed(df,"hash_key")
+#         saveDFcsv(df,join1_path,join1_filename)
+#         if display :
+#             print("JOINED dataset saved here :",join1_path+join1_filename+".csv")
+#     return df

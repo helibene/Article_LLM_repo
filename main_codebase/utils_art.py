@@ -8,7 +8,6 @@ Created on Mon Feb 26 00:11:13 2024
 import pandas as pd
 import os
 
-
 ## Conf variables
 conf_file_path="C:/Users/User/OneDrive/Desktop/article/file_2/.code_control/"
 conf_file_filename="code_conf_excel"
@@ -62,7 +61,7 @@ def openConfFile(sheet_name="gpt_models") :
     # out_dict = df.to_dict('split')
     return df
 
-
+# Conf file 
 
 def cfn_index(sheet_name="gpt_models",index=0,column_name="model_name") :#
     return cfn_field(sheet_name,"index",index,column_name)
@@ -78,8 +77,8 @@ def cfn_field(sheet_name="gpt_models",column_search="model_name",value_search="g
         return list(series[column_name])[0:max_return]
     else :
         return series.to_dict("records")[0:max_return] #,index=False
-    # return df
 
+# Other 
 def deleteUnnamed(df,set_index="") :
     #un_col_list = df.columns.str.contains('unnamed', case=False)
     un_col_list = df.columns.str.contains('^Unnamed', case=False)
@@ -87,7 +86,8 @@ def deleteUnnamed(df,set_index="") :
         df.drop(df.columns[df.columns.str.contains('^Unnamed', case=False)], axis=1, inplace=True)
     # df_q = df_q.loc[:, ~df_q.columns.str.contains('^Unnamed')]
     if set_index != "" :
-        df = df.set_index(set_index)
+        if set_index in list(df.columns) :
+            df = df.set_index(set_index)
     return df
     
 def getOpenAIKey(path,filename) :
@@ -95,5 +95,26 @@ def getOpenAIKey(path,filename) :
 
 def display_df(df):
     display(df)
+    
+def calculateRatio(n1,n2,stringReturn=True,round_num=2) :
+    our_num = round(float(n1)/max(float(n2),1),round_num)
+    if stringReturn :
+        if n2 != 0 :
+            return str(our_num)
+        else :
+            "error_div_0"
+    else :
+        return float(our_num)
+     
+def calculatePct(n1,n2,stringReturn=True,round_num=2,ajust_for_denom=0) :
+    our_num = round((100*(-(float(n2)*ajust_for_denom)+float(n1)))/max(float(n2),1),round_num)
+    if stringReturn :
+        if n2 != 0 :
+            return str(our_num)
+        else :
+            "error_div_0"
+    else :
+        return float(our_num)
+    
     
 print("IMPORT : utils_art")

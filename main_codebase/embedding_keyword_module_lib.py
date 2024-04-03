@@ -27,8 +27,8 @@ import warnings
 import re
 warnings.filterwarnings('ignore')
 ts = text_analysis.text_analysis()
-
 TAG_SELECTION_LIST = ["NNP","NN","JJ"]
+
 
 folder_path_embd_df = mv.embdedding_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/2_1_embdedding_main/embd_df/"
 filename_embd_df = mv.embdedding_filename
@@ -67,7 +67,7 @@ def dfColumnToMatrix(df,data_col="o_data",max_index=9999,index_col="hash_key",ma
         return mat_out
     
 def extractEmbedding(df,number_entries=99999999999): #51372
-    print(df.dtypes)
+    print("Input dataframe shape :",df.shape)
     df_out = dfColumnToMatrix(df,data_col="o_data",max_index=number_entries,index_col="hash_key",matToDf=True) #
     return df_out
 
@@ -82,6 +82,7 @@ def extractEmbeddingFromFile(number_entries=10000,display_stats=True): #51372
         display_df(emb_mat)
     saveDFcsv(emb_mat, folder_path_embd_raw, filename_embd_raw_save,True)
     return emb_mat
+
 ### Keyword Functions
 
 def parse_keywords_list(df, column_name="keywords_list",titleFlag=False,entry_limit=1000,output_df=False):#51400

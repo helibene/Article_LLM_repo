@@ -451,7 +451,8 @@ def selectOnDf(df, date_start="2015-01-01", date_end="2017-06-01", categroy_list
     df = deleteUnnamed(df,"hash_key")
     return df
 
-def filterQuerryDataset(df,thd_high=5000,thd_low=30, display_stats=True,display_end_stats=False,save=False) :
+def filterQuerryDataset(thd_high=5000,thd_low=30, display_stats=True,display_end_stats=False,save=False) :
+    df = openDFcsv(mv.query_path,mv.query_filename)
     ser_source = df['source_title'].value_counts() #.to_frame("count").sort_values(by=['count'],ascending=False)
     if thd_high > 0 and thd_high < 1 :
     #print(float(len(ser_source))*float(thd_high))

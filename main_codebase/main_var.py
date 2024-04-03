@@ -4,10 +4,10 @@ Created on Thu Mar 21 20:14:51 2024
 
 @author: Alexandre
 """
-
+import os
 
 class main_var :
-    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/",env=".main/"):#"test_new/"
+    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/" ,env=".main/"):#"test_new/"test_new4  ".main/"
         self.main_path = main_path
         self.env = env
         self.query_path = self.main_path+"1_1_query_main/"+self.env
@@ -31,6 +31,33 @@ class main_var :
         self.visu_filename = "visu_file"
         self.query_col_list = ["hash_key","title","category","source_title","published","year","year_month","source_url","url_list","url_TLD","link","pk"]
 
-mv = main_var()
+
+
+
+    def cleanFolders(self) :
+        self.delete_files_in_directory(self.query_path)
+        self.delete_files_in_directory(self.scarp_path)
+        self.delete_files_in_directory(self.article_path)
+        self.delete_files_in_directory(self.join1_path)
+        self.delete_files_in_directory(self.embdedding_path_raw)
+        self.delete_files_in_directory(self.embdedding_path)
+        self.delete_files_in_directory(self.completion_path)
+        self.delete_files_in_directory(self.join2_path)
+
+    def delete_files_in_directory(self,directory_path):
+       try:
+         files = os.listdir(directory_path)
+         for file in files:
+           file_path = os.path.join(directory_path, file)
+           if os.path.isfile(file_path):
+             os.remove(file_path)
+         print("All files deleted successfully.")
+       except OSError:
+         print("Error occurred while deleting files.")
+
 
 print("IMPORT : main_var ")
+
+
+# mv = main_var()
+# mv.cleanFolders()

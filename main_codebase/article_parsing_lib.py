@@ -22,10 +22,12 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 ts = text_analysis.text_analysis()
+from transformers import logging
+logging.set_verbosity_error()
 
 
 # All columns : ["html", "title", "authors", "publish_date", "text", "top_image", "images", "movies", "keywords", "summary"]
-_PARSING_COL_SELECTION = ["title", "authors","keywords", "publish_date", "text"] #,"summary"
+_PARSING_COL_SELECTION = ["title", "authors","keywords", "text"] #,"summary" ######, "publish_date"
 
 
 _SELECTION = 3
@@ -39,7 +41,7 @@ filename_out = mv.scarp_filename
 
 save_path_article = mv.article_path   #   "C:/Users/User/OneDrive/Desktop/article/files_3/1_3_article_main/"+env #article_download_main_2
 # output_fields = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"], "summary"
-output_fields = ['url', 'pk', 'hash_key', 'publish_date', 'title', 'authors', 'valid', 'text_len', 'keywords_list'] + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]#, "summary"
+output_fields = ['url', 'pk', 'hash_key', 'title', 'authors', 'valid', 'text_len', 'keywords_list'] + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]#, "summary" ####'publish_date',
 
 
 def urlToDict(url) :
@@ -124,7 +126,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
             #     out_dict["publish_date"] = publish_date
             # else :
             #     out_dict["publish_date"] = None
-            out_dict["publish_date"] = "xxx"
+            # out_dict["publish_date"] = "xxx"
             analysis_nlp_dict = {}
             if add_nlp == 2:
                 analysis_nlp_dict = ts.analyseArticle(text)
@@ -162,12 +164,10 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
         return out_dict
         
 
-def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False):
-    #stat_field_selection = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list","summary", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
-    # stat_field_selection = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]
-    stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list","summary", "text_len","valid"]
-    stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", "publish_date", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
-    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
+def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False): ####, "publish_date"
+    stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "keywords_list","summary", "text_len","valid"]
+    stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
+    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
     if add_nlp == 0 :
         stat_field = stat_field_selection0
     if add_nlp == 1 :
@@ -180,26 +180,18 @@ def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_
     df_input_url = df_input["link"][index_from:index_to]
     art_count = 0
     for url_entry in df_input_url:
-        
         ar_list = readStatsFromURL(url_entry,save_articles,display_df,art_count,add_nlp)
-        ar_list["publish_date"] = "ccc"
+        # ar_list["publish_date"] = "ccc"
         df = addDictToDF(df,ar_list)
         art_count = art_count + 1
-        # if display_df :
-        #     print(" - #"+str(art_count)+" article registered")
         if (art_count%int((index_to-index_from)*step_pct) == 0 or art_count==len(df_input_url)) and save_steps :
-            # df_out = df[output_fields]stat_field
             df_out = df[stat_field]
             df_out = deleteUnnamed(df_out,"hash_key")
-            # saveDFcsv(df_out, save_path, filename_out+"_"+str(art_count)) # , mode="w"
             saveDFcsv(df_out, save_path, filename_out+"_"+str(art_count)) # , mode="w"
-        # df = df[output_fields]
         
     if save_final :
         df = df[stat_field]
         df = deleteUnnamed(df,"hash_key")
-        
-        # saveDFcsv(df, save_path, filename_out+"_backup") # , mode="w"
         saveDFcsv(df, save_path, filename_out,True) # , mode="w"
         print("Final file saved here :",save_path)
     if display_df :

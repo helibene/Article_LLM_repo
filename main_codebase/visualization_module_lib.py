@@ -321,3 +321,7 @@ def plotSave(plot,path,filename) :
 #     fig.show()
 # #     fig = px.line(df, x="year_month", title='TEST',color='category')
 # #     fig.show()
+
+
+
+rename_dict = {"hash_key":"Primary Key", "title_quer":"Main Title","link":"Google Link","published":"Date Publication","source_url":"Real Link","source_title":"Name of the source","category":"Main Category","year":"Year","year_month":"Year & Month", "url_TLD":"url_extention","keywords_list":"List Of Keywords"}

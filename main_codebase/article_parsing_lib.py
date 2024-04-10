@@ -104,13 +104,18 @@ def getStartArticle(article_dict,length=300) :
     
 
 def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1) :
+    display_hashpk_for_debug = False
     valid = True
     nlp_valid = True
     pk = url.split("articles/")[1].replace("?oc=5","")
     hash_key = hashlib.shake_256(str(pk).encode()).hexdigest(20)
     out_dict = {"url":url,"pk":pk,"hash_key":hash_key}
+    if display_hashpk_for_debug :
+        print(" - START - Read article online and get text and keyword into dict #"+str(increment)+"  ("+str(hash_key)+")")
     ar_dict = urlToDict(url)
-    display_text = " - Loadind Article #"+str(increment)+"   ("
+    if display_hashpk_for_debug :
+        print(" - DONE - Read article online and get text and keyword into dict  #"+str(increment)+"  ("+str(hash_key)+")")
+    display_text = " - Loadind Article #"+str(increment)+"  '"+str(hash_key)+"' ("
     if type(ar_dict) != type(None) :
         text = ar_dict['text']
         text_len = len(text)
@@ -127,6 +132,8 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
             # else :
             #     out_dict["publish_date"] = None
             # out_dict["publish_date"] = "xxx"
+            if display_hashpk_for_debug :
+                print(" - STOP - Generate NLP and length indicators using  'text_analysis' module  #"+str(increment)+"  ("+str(hash_key)+")")
             analysis_nlp_dict = {}
             if add_nlp == 2:
                 analysis_nlp_dict = ts.analyseArticle(text)
@@ -138,6 +145,8 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
             out_dict["keywords_list"] = out_dict["keywords"]
             # out_dict["summary"] = out_dict["summary"]
             out_dict = out_dict | analysis_nlp_dict
+            if display_hashpk_for_debug :
+                print(" - STOP - Generate NLP and length indicators using  'text_analysis' module  #"+str(increment)+"  ("+str(hash_key)+")")
             if saveArticle :
                 dict_for_save = {"hash_key":hash_key,"text":text}
                 articleDictToFile(dict_for_save, save_path_article)
@@ -167,7 +176,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
 def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False): ####, "publish_date"
     stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "keywords_list","summary", "text_len","valid"]
     stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
-    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"]
+    stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"], "tb.polaj"
     if add_nlp == 0 :
         stat_field = stat_field_selection0
     if add_nlp == 1 :

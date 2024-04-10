@@ -25,9 +25,16 @@ from textblob.sentiments import PatternAnalyzer
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from transformers import pipeline
+from transformers import logging
+logging.set_verbosity_error()
 import warnings
 warnings.filterwarnings('ignore')
+from transformers import pipeline
+from transformers import AutoModelForSequenceClassification
+from transformers import TFAutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoConfig
+import numpy as np
+from scipy.special import softmax
 
 MODEL_ID = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 MIN_NUM_SENTENCES = 10
@@ -47,7 +54,21 @@ class text_analysis :
         self.tf_sentiment_pipeline = pipeline("text-classification",return_all_scores =True,function_to_apply="sigmoid", model = MODEL_ID) #softmax#sentiment-analysis
         self.tb_NaiveBayes = NaiveBayesAnalyzer()
         self.tb_PatternAnalyzer = PatternAnalyzer()
+        
+        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+        # self.config = AutoConfig.from_pretrained(MODEL_ID)
+        self.model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
     
+    def test_sent(self, text) :
+        dict_out={}
+        encoded_input = self.tokenizer(text, return_tensors='pt')
+        output = self.model(**encoded_input)
+        scores = output[0][0].detach().numpy()
+        scores = softmax(scores)
+        dict_out["ts.neg"] = scores[0]
+        dict_out["ts.neu"] = scores[1]
+        dict_out["ts.pos"] = scores[2]
+        return dict_out
     def lenStats(self,text,dict_out={}) :
         textblob = TextBlob(text)
         dict_out["tb.sent"] = len(textblob.sentences)
@@ -79,9 +100,11 @@ class text_analysis :
             dict_out["vs.neg"] = vs["neg"]
             dict_out["vs.comp"] = vs["compound"]
         if ret_list[2] :
-            sp = self.tf_sentiment_pipeline(text)
-            dict_out["ts.neg"] = sp[0][0]['score']
-            dict_out["ts.pos"] = sp[0][1]['score']
+            dict_out = dict_out | self.test_sent(text)
+            # print(len(text))
+            # sp = self.tf_sentiment_pipeline(text)
+            # dict_out["ts.neg"] = sp[0][0]['score']
+            # dict_out["ts.pos"] = sp[0][1]['score']
         if ret_list[0] and ret_list[1] and ret_list[2] and ret_list[3] :
             dict_out["tb.class"] = bool(dict_out["tb.neg"]<dict_out["tb.pos"])
             dict_out["vs.class"] = bool(dict_out["vs.neg"]<dict_out["vs.pos"])

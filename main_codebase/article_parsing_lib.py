@@ -68,6 +68,11 @@ def urlToArticle(url, display=False,nlp=False) :
     except KeyboardInterrupt:
         pass
         return None
+    except ValueError:
+        if display :
+            print("WARNING : url issue value error :",url)
+        pass
+        return None
 
 def articleToDict(article) :
     out_dict = {}

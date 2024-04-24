@@ -37,12 +37,12 @@ import numpy as np
 from scipy.special import softmax
 
 MODEL_ID = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-MIN_NUM_SENTENCES = 10
-MAX_NUM_SENTENCES = 70
+MIN_NUM_SENTENCES = 2
+MAX_NUM_SENTENCES = 100 # max 600
 
-MIN_SENTENCE_LEN = 3
-MAX_SENTENCE_LEN = 50
-
+MIN_SENTENCE_LEN = 2
+MAX_SENTENCE_LEN = 100
+MAX_SENTENCE_CHAR_LEN = 1000
 
 
 # vs : vaderSentiment
@@ -60,6 +60,7 @@ class text_analysis :
         self.model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
     
     def test_sent(self, text) :
+        print(len(str(text)))
         dict_out={}
         encoded_input = self.tokenizer(text, return_tensors='pt')
         output = self.model(**encoded_input)
@@ -121,32 +122,70 @@ class text_analysis :
             return self.lenStats(text) | self.subpolStats(text) | self.sentimentStats(text)
     
     def analyseArticle(self, text) :
-        article_status = ""
+        disp = True
+        # article_status = ""
         textblob = TextBlob(text)
         sentences_list = textblob.sentences
-        if len(sentences_list)<MIN_NUM_SENTENCES :
-            article_status = article_status + "LOW_NUM_SENTENCES+"
-        if len(sentences_list)>MAX_NUM_SENTENCES :
-            article_status = article_status + "HIGH_NUM_SENTENCES+"
         dict_list = []
         len_list = []
+        sent_len = 0
         sent_count = 0
-        for sentences in sentences_list :
-            if sent_count<MAX_NUM_SENTENCES :
-                sent_len = len(sentences.words)
-                # print(sent_len)
-                if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN:
-                    len_list.append(sent_len)
-                    new_dict = self.analyseText2(str(sentences),True)
-                    if "tb.class" in new_dict.keys() :
-                        del new_dict["tb.class"]
-                        del new_dict["vs.class"]
-                        del new_dict["ts.class"]
-                    dict_list.append(new_dict) # | self.lenStats(text)
-                    sent_count = sent_count + 1
+        if sent_count < MAX_NUM_SENTENCES : #and sent_count > MIN_NUM_SENTENCES
+            #happends
+            for sentence in sentences_list :
+                sent_len = len(sentence.words)
+                if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN :
+                    #happends
+                    big_word_valid = True
+                    for w in sentence.words :
+                        if len(w) < MAX_SENTENCE_CHAR_LEN :
+                            big_word_valid = False
+                    if big_word_valid :
+                        len_list.append(sent_len)
+                        new_dict = self.analyseText2(str(sentence),True)
+                        if "tb.class" in new_dict.keys() :
+                            del new_dict["tb.class"]
+                            del new_dict["vs.class"]
+                            del new_dict["ts.class"]
+                        dict_list.append(new_dict) # | self.lenStats(text)
+                        sent_count = sent_count + 1
+                else :
+                    pass
+                    # print("lv2_"+str(sent_len))
+        else :
+            pass
+            # print("lv1_"+str(sent_len))
+        #     # lenStats()
+        #     return self.subpolStats(text)
+        # else:
+        #     for sentence in sentences_list :
+        #         sent_len = len(sentence.words)
+        #         if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN :
+        #             big_word_valid=True
+        #             # for w in sentence.words :
+        #                 # if len(w) > MAX_SENTENCE_CHAR_LEN :
+        #                 #     big_word_valid = False
+        #                     # print("big_word_valid FALSE")
+        #                     #print(w)
+                    
+        #         else :
+        #             pass
+        #             # if disp :
+        #             #     print("MAX_SENTENCE_LEN_or_MIN_SENTENCE_LEN WARNNING")
+        #     else :
+        #         pass
+        #         # if disp :
+        #         #     print("LOW_NUM_SENTENCES_or_MAX_NUM_SENTENCES ERROR")
+        # print(100*sent_count/len(sentences_list))
         out_dict = self.weigthAverage(dict_list,len_list)
         return out_dict | self.lenStats(text)
-        
+    
+    
+        # if len(sentences_list)<MIN_NUM_SENTENCES :
+        #     article_status = article_status + "_LOW_NUM_SENTENCES_"
+        # if len(sentences_list)>MAX_NUM_SENTENCES :
+        #     article_status = article_status + "_HIGH_NUM_SENTENCES_"
+            
     def weigthAverage(self,dict_list,len_list):
         if len(dict_list) != 0 and len(len_list) != 0 and sum(len_list) !=0 :
             sum_dict = {}

@@ -60,16 +60,20 @@ class text_analysis :
         self.model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
     
     def test_sent(self, text) :
-        print(len(str(text)))
+        # print(len(str(text)))
         dict_out={}
         encoded_input = self.tokenizer(text, return_tensors='pt')
-        output = self.model(**encoded_input)
-        scores = output[0][0].detach().numpy()
-        scores = softmax(scores)
-        dict_out["ts.neg"] = scores[0]
-        dict_out["ts.neu"] = scores[1]
-        dict_out["ts.pos"] = scores[2]
-        return dict_out
+        try :
+            output = self.model(**encoded_input)
+            scores = output[0][0].detach().numpy()
+            scores = softmax(scores)
+            dict_out["ts.neg"] = scores[0]
+            dict_out["ts.neu"] = scores[1]
+            dict_out["ts.pos"] = scores[2]
+            return dict_out
+        except RuntimeError :
+            return {"ts.neg":0.0,"ts.neu":0.0,"ts.pos":0.0}
+
     def lenStats(self,text,dict_out={}) :
         textblob = TextBlob(text)
         dict_out["tb.sent"] = len(textblob.sentences)
@@ -138,9 +142,9 @@ class text_analysis :
                     #happends
                     big_word_valid = True
                     for w in sentence.words :
-                        if len(w) < MAX_SENTENCE_CHAR_LEN :
+                        if len(w) > MAX_SENTENCE_CHAR_LEN :
                             big_word_valid = False
-                    if big_word_valid :
+                    if big_word_valid : #
                         len_list.append(sent_len)
                         new_dict = self.analyseText2(str(sentence),True)
                         if "tb.class" in new_dict.keys() :

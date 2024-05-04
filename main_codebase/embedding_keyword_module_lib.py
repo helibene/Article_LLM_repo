@@ -226,9 +226,9 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500,add_nlp_stats=True,nlp
     df_main = openDFcsv(join1_path,join1_filename)
     df_main = df_main[["hash_key","title_quer","keywords_list"]]
     df1 = genrateKeywordExtract(df_main,entry_limit,common_word_max,"title_quer",True)
+    print("Keywords generated from title")
     df2 = genrateKeywordExtract(df_main,entry_limit,common_word_max,"keywords_list",False)
-    print(df1.dtypes)
-    print("stop")
+    print("Keywords separated from keyword long string")
     df = df1.join(df2, how="inner", lsuffix='_t', rsuffix='_k')
     #df = df[["0_f_t","1_f_t","3_f_t","word_count_f_t","word_combined_f_t","0_f_k","1_f_k","3_f_k","word_count_f_k","word_combined_f_k","0_s_t","1_s_t","3_s_t","word_count_s_t","word_combined_s_t","0_s_k","1_s_k","3_s_k","word_count_s_k","word_combined_s_k"]]
     df = df[["word_count_f_t","word_combined_f_t","word_count_f_k","word_combined_f_k","word_count_s_t","word_combined_s_t","word_count_s_k","word_combined_s_k"]]#,"0_s_k","0_s_t"]]
@@ -239,6 +239,7 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500,add_nlp_stats=True,nlp
     #df = df_main.join(df, how="inner", rsuffix='_new')  
     # df = df_main.join(df, how="inner", rsuffix='_new1')  
     df = df_main.join(df, how="inner")
+    print("All keywords extracted")
     if add_nlp_stats :
         df = generateNLPonKeywords(df,0,df.shape[0],nlp_source_col,True,True)
     # df = df_main.join(df, how="inner", rsuffix='_new2')

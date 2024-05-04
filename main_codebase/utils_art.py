@@ -9,7 +9,8 @@ import pandas as pd
 import os
 
 ## Conf variables
-conf_file_path="C:/Users/User/OneDrive/Desktop/article/file_2/.code_control/"
+#conf_file_path="C:/Users/User/OneDrive/Desktop/article/file_2/.code_control/"
+conf_file_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/0_1_bin/"
 conf_file_filename="code_conf_excel"
 
 ## Open Files
@@ -116,5 +117,29 @@ def calculatePct(n1,n2,stringReturn=True,round_num=2,ajust_for_denom=0) :
     else :
         return float(our_num)
     
-    
+def unionNfiles(pathList=[],filenameList=[],savePath="",saveFilename="") :
+    file_out = openDFcsv(pathList[0],filenameList[0])
+    for i in range(len(pathList)-1) :
+        filenew = openDFcsv(pathList[i+1],filenameList[i+1])
+        file_out = file_out.union(filenew)
+    if savePath!="" and saveFilename!="":
+        saveDFcsv(file_out,savePath,saveFilename)
+    return file_out
+        
+def unionFiles(path1="",filename1="",path2="",filename2="",savePath="",saveFilename="") :
+    file1 = openDFcsv(path1,filename1)
+    file2 = openDFcsv(path2,filename2)
+    file_out = pd.concat([file1,file2])
+    file_out = deleteUnnamed(file_out)
+    #file_out = file1.concat(file2,ignore_index=True)
+    if savePath!="" and saveFilename!="":
+        saveDFcsv(file_out,savePath,saveFilename)
+    return file_out
 print("IMPORT : utils_art")
+
+# main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_2_scarp_main/.main/temp3/"
+# file1="1_scarp_file_20986"
+# file2="2_scarp_file_30576"#51562
+# file3="3_scarp_file_18279"#69841   59492
+# #unionFiles(main_folder,file1,main_folder,file2,main_folder,"join10")
+# unionFiles(main_folder,"join10",main_folder,file3,main_folder,"join20")

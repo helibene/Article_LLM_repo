@@ -599,3 +599,27 @@ Created on Sat Mar 30 00:05:32 2024
 #         if display :
 #             print("JOINED dataset saved here :",join1_path+join1_filename+".csv")
 #     return df
+
+
+# from article_scraping_lib import *
+# from utils_art import *
+# import article_scraping_lib
+# import pandas as pd
+# from textblob import TextBlob
+# test_text = "This IS expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (initializing a BertForSequenceClassification model from a BertForPreTraining model). This IS NOT expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model)."
+# textblob = TextBlob(test_text)
+# sentences_list = textblob.sentences
+# df = getStandardDf(article_scraping_lib._STANDARD_SCRAPPING_FIELDS)
+# df2, test = fullWorkflow(gn,df,True)
+# display(df2)
+# print(test)
+# print(df2.dtypes)
+# print(len(sentences_list))
+# print(sentences_list)
+# Members = {"John": "Male", "Kat": "Female", "Doe": "Female","Clinton": "Male"}
+
+# del Members["lol"]
+# print(Members)
+# print(len(sentences_list[0].words))
+
+

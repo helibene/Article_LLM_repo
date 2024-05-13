@@ -240,6 +240,14 @@ Created on Sat Mar 30 00:05:32 2024
 #     # return df
 
 """ARTICLE_SCRAPING"""
+
+# def mainJoinOut() :
+#     df = openDFcsv(keyword_path,keyword_filename)
+#     df_out = ekml.generateNLPonKeywords(df,0,df.shape[0],True)
+#     # df_out = deleteUnnamed(df_out,"hash_key")
+#     saveDFcsv(df_out, join2_path,join2_filename)
+#     return df_out
+
 # print(df[~ser_source_low])
 # init_size = df.shape[0]
 # init_uni_size = len(ser_source)
@@ -384,6 +392,106 @@ Created on Sat Mar 30 00:05:32 2024
 # 'sub_articles' (list)
 
 
+# main_path = mv.query_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_1_query_main/"+env
+# filename = mv.query_filename  #  "reduction_test"
+
+# scarp_path = mv.scarp_path  #  "C:/Users/User/OneDrive/Desktop/article/files_3/1_2_scarp_main/"+env
+# scarp_filename = mv.scarp_filename
+
+# join1_path = mv.join1_path
+# join1_filename = mv.join1_filename
+
+# embdedding_path=mv.embdedding_path
+# embdedding_filename=mv.embdedding_filename
+
+# embdedding_path_raw = mv.embdedding_path_raw
+# embdedding_filename_raw = mv.embdedding_filename_raw
+
+# keyword_path = mv.keyword_path
+# keyword_filename = mv.keyword_filename
+
+# join2_path = mv.join2_path
+# join2_filename = mv.join2_filename
+
+
+
+# path_union_stat = join1_path"C:/Users/User/OneDrive/Desktop/article/files_3/1_4_join_main/"+env
+# filename_union_stat = join1_filename"join_main_test-filter"
+
+# llm_result = "C:/Users/User/OneDrive/Desktop/article/file_2/test_llm_output/new_embedding/"
+
+# llm_join_out = "C:/Users/User/OneDrive/Desktop/article/file_2/join_2_df/"
+# llm_join_out_filename = "article_stats_embedding"
+
+
+# df = getStandardDf(_STANDARD_SCRAPPING_FIELDS)
+# df2 = fullWorkflow(gn,df,True)
+# display(df2)
+
+
+# def calculateStatsLength(df,groupping,display_df=True):
+#     #rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}
+#     rename_dict = {"tb.char":"char_n","tb.sent":"sentence_n","tb.noun":"noun_n","tb.word":"words_n"}
+#     df = df.rename(columns=rename_dict)
+#     list_of_len_fields=list(rename_dict.values())
+#     # df_group = df[[groupping,"char_n","sentence_n","noun_n","words_n"]].groupby(groupping).sum(["char_n","sentence_n","noun_n","words_n"])
+#     df_group = df[[groupping]+list_of_len_fields].groupby(groupping).sum(list_of_len_fields)
+#     df_count = df[groupping].value_counts().to_frame("count")#
+#     df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
+#     df_main[["char_per_count","sentence_per_count","noun_per_count","word_per_count"]] = df_main[list_of_len_fields].div(df_main['count'], axis=0).astype(float)
+#     df_main[["char_per_sentence","noun_per_sentence","word_per_sentence"]] = df_main[["char_n","noun_n","words_n"]].div(df_main["sentence_n"], axis=0).astype(float)
+#     df_main[["char_per_word"]] = df_main[["char_n"]].div(df_main["words_n"], axis=0).astype(float)
+#     df_main = df_main.sort_values(by=["count"],ascending=True)
+#     if display_df :
+#         print("Dataframe Statistics Length Column :'"+groupping+"'")
+#         display_df(df_main)
+#     return df_main
+
+# def calculateStatsNLP(df,groupping,display_df=True,display_stats=False,out_raw=False):
+#     # rename_dict = {"tb.pol":"Polarity","tb.sub":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
+#     rename_dict = {"tb.polaj":"polarity","tb.sub":"subjectivity","al.pos":"positivity","al.neg":"negativity"}
+#     df = df.rename(columns=rename_dict)
+#     column_list = list(rename_dict.values())
+#     column_list_ajusted = []
+#     for field_count in column_list :
+#         if display_stats :
+#             print(field_count," ",getStatsFromCol(df,field_count))
+#         df[field_count+"_aj"] = (df[field_count]-getStatsFromCol(df,field_count)[0])/getStatsFromCol(df,field_count)[2]
+#         column_list_ajusted.append(field_count+"_aj")
+#     if out_raw :
+#         df_main = df
+#     else :
+#         column_list = column_list + column_list_ajusted
+#         df_group = df[[groupping]+column_list].groupby(groupping).sum(column_list)
+#         df_count = df[groupping].value_counts().to_frame("count")#
+#         df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
+#         list_field_count = []
+#         for field in column_list :
+#             list_field_count.append(field+"_per_count")
+#         df_main[list_field_count] = df_main[column_list].div(df_main['count'], axis=0).astype(float)
+#         # df_main = df_main.sort_values(by=["count"],ascending=True)
+#         df_main = df_main.sort_values(by=[groupping],ascending=True)
+#     if display_df :
+#         print("Dataframe Statistics NLP Column :'"+groupping+"'")
+#         display_df(df_main)
+#     return df_main
+
+# def getStatsFromCol(df, column) :
+#     min_val = df[column].min()
+#     max_val = df[column].max()
+#     return min_val,max_val,max_val-min_val
+
+# def calculateStatsColList(df, column_list=[],stat_type="len",display_df=True,display_stats=False,out_raw=False):# ,stat_type="nlp"
+#     df_list_out = []
+#     for col in column_list :
+#         if stat_type=="len":
+#             df_app = calculateStatsLength(df,col,display_df)
+#             df_list_out.append(df_app)
+#         if stat_type=="nlp":
+#             df_app = calculateStatsNLP(df,col,display_df,display_stats,out_raw)
+#             df_list_out.append(df_app)
+#     return df_list_out
+
 """ARTICLE_PARSING"""
 # def generateNLPonKeywords(df_main,index_from=0,index_to=500,display_log=True):
 #     if index_to == -1 :
@@ -405,6 +513,15 @@ Created on Sat Mar 30 00:05:32 2024
 #     return df
 
 #print("IMPORT : article_parsing_lib ")
+
+#open_path = mv.query_path  #  "C:/Users/User/OneDrive/Desktop/article/files_3/1_1_query_main/"+env
+#filename_input = mv.query_filename # "query_main_final"#"query_large_2010_to_2023"#"query_main_final"
+
+# save_path = mv.scarp_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_2_scarp_main/"+env #parssing_df_main/
+#filename_out = mv.scarp_filename
+
+#save_path_article = mv.article_path   #   "C:/Users/User/OneDrive/Desktop/article/files_3/1_3_article_main/"+env #article_download_main_2
+# output_fields = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"], "summary"
 
 
 
@@ -501,7 +618,75 @@ Created on Sat Mar 30 00:05:32 2024
     #     dict_out["ts.pos"] = sp[0][1]['score']
     #     dict_out["ts.class"] = bool(dict_out["ts.neg"] <dict_out["ts.pos"])
     #     return dict_out
-
+            # print(len(text))
+            # sp = self.tf_sentiment_pipeline(text)
+            # dict_out["ts.neg"] = sp[0][0]['score']
+            # dict_out["ts.pos"] = sp[0][1]['score']
+            
+    # def analyseArticle(self, text) :
+    #     disp = True
+    #     # article_status = ""
+    #     textblob = TextBlob(text)
+    #     sentences_list = textblob.sentences
+    #     dict_list = []
+    #     len_list = []
+    #     sent_len = 0
+    #     sent_count = 0
+    #     if sent_count < MAX_NUM_SENTENCES : #and sent_count > MIN_NUM_SENTENCES
+    #         #happends
+    #         for sentence in sentences_list :
+    #             sent_len = len(sentence.words)
+    #             if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN :
+    #                 #happends
+    #                 big_word_valid = True
+    #                 for w in sentence.words :
+    #                     if len(w) > MAX_SENTENCE_CHAR_LEN :
+    #                         big_word_valid = False
+    #                 if big_word_valid : #
+    #                     len_list.append(sent_len)
+    #                     new_dict = self.analyseText2(str(sentence),True)
+    #                     if "tb.class" in new_dict.keys() :
+    #                         del new_dict["tb.class"]
+    #                         del new_dict["vs.class"]
+    #                         del new_dict["ts.class"]
+    #                     dict_list.append(new_dict) # | self.lenStats(text)
+    #                     sent_count = sent_count + 1
+    #             else :
+    #                 pass
+    #                 # print("lv2_"+str(sent_len))
+    #     else :
+    #         pass
+    #         # print("lv1_"+str(sent_len))
+    #     #     # lenStats()
+    #     #     return self.subpolStats(text)
+    #     # else:
+    #     #     for sentence in sentences_list :
+    #     #         sent_len = len(sentence.words)
+    #     #         if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN :
+    #     #             big_word_valid=True
+    #     #             # for w in sentence.words :
+    #     #                 # if len(w) > MAX_SENTENCE_CHAR_LEN :
+    #     #                 #     big_word_valid = False
+    #     #                     # print("big_word_valid FALSE")
+    #     #                     #print(w)
+                    
+    #     #         else :
+    #     #             pass
+    #     #             # if disp :
+    #     #             #     print("MAX_SENTENCE_LEN_or_MIN_SENTENCE_LEN WARNNING")
+    #     #     else :
+    #     #         pass
+    #     #         # if disp :
+    #     #         #     print("LOW_NUM_SENTENCES_or_MAX_NUM_SENTENCES ERROR")
+    #     # print(100*sent_count/len(sentences_list))
+    #     out_dict = self.weigthAverage(dict_list,len_list)
+    #     return out_dict | self.lenStats(text)
+    
+    
+    #     # if len(sentences_list)<MIN_NUM_SENTENCES :
+    #     #     article_status = article_status + "_LOW_NUM_SENTENCES_"
+    #     # if len(sentences_list)>MAX_NUM_SENTENCES :
+    #     #     article_status = article_status + "_HIGH_NUM_SENTENCES_"
 """EMBD_KEYWD"""
 
 # def decomposeKeywordList(string,getList=True) :
@@ -517,7 +702,43 @@ Created on Sat Mar 30 00:05:32 2024
 # #             if string2 != "" :
 # #                 word_list.append(string2)
 # #     return word_list
+# df_keyword = mainKeywordWF(entry_limit=1000,
+#               common_word_max=700,
+#               add_nlp_stats=True,
+#               nlp_source_col="word_combined_all")
+    #df["word_combined_f"].replace(" @","")
+    #df["word_combined_s"].replace(" @","")
+    #df['word_combined_s'] = df['word_combined_s'].str.replace(' @','')
+    #df['word_combined_f'] = df['word_combined_s'].str.replace(' @','')
+    
+    
+    # def cleanString(string) :
+    #     #~out_str = string.strip("][”“|’><%—–//").replace("'", "").replace("\\d", "");
+    #     out_str = "".join(re.findall("[a-zA-Z]+", string))
+    #     if len(out_str)>3:
+    #         return out_str
+    #     else :
+    #         return ""
 
+    # def decomposeTitle(string, getList=True) :
+    #     decomposed = "=".join(re.findall("[a-zA-Z]+", string.lower()))
+    #     if getList :
+    #         decomposed = decomposed.split('=')
+    #         # if type(decomposed) != type(None) :
+    #         #     for i in range(len(decomposed)) :
+    #         #         if len(decomposed[i])<3:
+    #         #             decomposed = decomposed.remove(decomposed[i])
+    #     return decomposed
+
+    # def decomposeKeywordList(string,getList=True) :
+    #     decomposed = "&".join(re.findall("[a-zA-Z]+", string.lower())) #.split(', ')
+    #     if getList :
+    #         decomposed = decomposed.split('&')
+    #         # if type(decomposed) != type(None) :
+    #         #     for i in range(len(decomposed)) :
+    #         #         if len(decomposed[i])<3:
+    #         #             decomposed = decomposed.remove(decomposed[i])
+    #     return decomposed
 """VISU"""
 # def addVisuColumns(df) :
 #     if "url_TLD" in df.columns :
@@ -622,4 +843,67 @@ Created on Sat Mar 30 00:05:32 2024
 # print(Members)
 # print(len(sentences_list[0].words))
 
+    # base = {"x":1,"y":2,"z":3,"c":"category","size":"words","hover_name":"source_title","custom_data":["title_quer"],
+    #                 "custom_data":None,"browser":True,"facet_row":None,"facet_col":None,"facet_row_spacing":0.02,"facet_col_spacing":0.02,
+    #                 "animation_frame":None,"animation_group":None,"marginal_x":MARGINAL_LIST[0],"marginal_y":MARGINAL_LIST[0],
+    #                 "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":30,"opacity":0.85}
 
+    # base = {"x":1,"y":2,"z":3,"c":"category","size":"tb.word","hover_name":"source_title","custom_data":["title_quer"], #"custom_data":None,
+    #                 "browser":browser,"facet_row":None,"facet_col":None,"facet_row_spacing":0.02,"facet_col_spacing":0.02,
+    #                 "animation_frame":None,"animation_group":None,"marginal_x":MARGINAL_LIST[0],"marginal_y":MARGINAL_LIST[0],
+    #                 "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":30,"opacity":0.85}
+    
+"""AGREFATION_MODULE"""
+    # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"tb.sentences","tb.noun_phrases":"tb.noun_phrases","tb.words":"tb.words","tb.polarity":"tb.polarity","tb.subjectivity":"tb.subjectivity","tb.p_pos":"tb.p_pos","tb.p_neg":"tb.p_neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.compound","valid":"valid","link_q":"link","pk_q":"pk",}
+    # rename_dict = {"title_q":"title_quer","title_p":"title_par","published_q":"published","year_q":"year","year_month_q":"year_month","source_url_q":"source_url","url_list_q":"url_list","url_TLD_q":"url_TLD","source_title_q":"source_title","category_q":"category","authors":"authors","keywords_list":"keywords_list","text_len_p":"text_len","tb.sentences":"sentences","tb.noun_phrases":"noun_phrases","tb.words":"words","tb.polarity":"polarity","tb.subjectivity":"subjectivity","tb.p_pos":"tb.pos","tb.p_neg":"tb.neg","vs.neg":"vs.neg","vs.neu":"vs.neu","vs.pos":"vs.pos","vs.compound":"vs.comp","valid":"valid","link_q":"link","pk_q":"pk"}
+    #rename_dict = {"pk_q":"pk"}
+        
+    
+"""DIM_RED"""
+
+# def testDimReduct(df,i) :
+#     # df = dfNormalize(df)
+#     df_tsne = dimReduction_TSNE(df)
+#     plot2Dpandas(df_tsne,title="TSNE (T-distributed Stochastic Neighbor Embedding)",save=True,path=folder_path_graph+"TSNE_",savecount=i)
+    
+#     df_pca = dimReduction_PCA(df)
+#     plot2Dpandas(df_pca,title="PCA (Principal Component Analysis)",save=True,path=folder_path_graph+"PCA_",savecount=i)
+    
+#     df_ipca = dimReduction_IPCA(df)
+#     plot2Dpandas(df_ipca,title="IPCA (Incremental Principal Component Analysis)",save=True,path=folder_path_graph+"IPCA_",savecount=i)
+    
+#     df_nnt = dimReduction_NNT(df)
+#     plot2Dpandas(df_nnt,title="NNT (Nearest Neighbors Transformer)",save=True,path=folder_path_graph+"IPCA_",savecount=i)
+
+# def calculateStatsNLP(df,groupping,display_data=True,display_stats=False,out_raw=False,only_keyword_nlp=False):
+#     # rename_dict = {"tb.pol":"Polarity","tb.sub":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
+    
+#     if only_keyword_nlp :
+#         rename_dict = {"tb.polaj_k":"polarity","tb.sub_k":"subjectivity","ts.pos_k":"positivity","ts.neg_k":"negativity"}
+#     else :
+#         rename_dict = {"tb.polaj":"polarity","tb.sub":"subjectivity","al.pos":"positivity","al.neg":"negativity"}
+#     df = df.rename(columns=rename_dict)
+#     column_list = list(rename_dict.values())
+#     column_list_ajusted = []
+#     for field_count in column_list :
+#         if display_stats :
+#             print(field_count," ",getStatsFromCol(df,field_count))
+#         df[field_count+"_aj"] = (df[field_count]-getStatsFromCol(df,field_count)[0])/getStatsFromCol(df,field_count)[2]
+#         column_list_ajusted.append(field_count+"_aj")
+#     if out_raw :
+#         df_main = df
+#     else :
+#         column_list = column_list + column_list_ajusted
+#         df_group = df[[groupping]+column_list].groupby(groupping).sum(column_list)
+#         df_count = df[groupping].value_counts().to_frame("count")#
+#         df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
+#         list_field_count = []
+#         for field in column_list :
+#             list_field_count.append(field+"_per_count")
+#         df_main[list_field_count] = df_main[column_list].div(df_main['count'], axis=0).astype(float)
+#         # df_main = df_main.sort_values(by=["count"],ascending=True)
+#         df_main = df_main.sort_values(by=[groupping],ascending=True)
+#     if display_data :
+#         print("Dataframe Statistics NLP Column :'"+groupping+"'")
+#         display_df(df_main)
+#     return df_main

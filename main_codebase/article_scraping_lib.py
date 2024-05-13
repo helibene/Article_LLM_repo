@@ -10,62 +10,25 @@ from pygooglenews import GoogleNews
 import pandas as pd
 from dateparser import parse as parse_date
 import matplotlib.pyplot as plt
-from utils_art import *
+from utils_art import saveDFcsv, deleteUnnamed, openDFcsv, calculatePct, calculateRatio, display_df
 import hashlib
-import os
-import embedding_keyword_module_lib as ekml
 from datetime import timedelta
 pd.set_option('expand_frame_repr', False)
-
+# import embedding_keyword_module_lib as ekml
 
 _TOPIC_LIST = ["TOP","WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"] #"CAAqJQgKIh9DQkFTRVFvSUwyMHZNR3QwTlRFU0JXVnVMVWRDS0FBUAE"
 _STANDARD_SCRAPPING_FIELDS = ["title","link", "published", "source_url", "source_title", "category", "year", "year_month","pk","url_list","url_TLD", "hash_key"]
-#_STANDARD_SCRAPPING_FIELDS = ["hash_key","title", "category"]
-#_STANDARD_SCRAPPING_FIELDS = ["hash_key","title","category","source_title","source_url","is_https","url_list","url_tld","published_date","published_date_str","published_date_int","published_time_raw","published_time_struct","published_year","published_year_month","link","guidislink","num_sub_article","num_links","language_title","language_summary","source_in_title","id"]
+_MIN_SCRAPPING_FIELDS = ["hash_key","title", "category"]
+_ALL_SCRAPPING_FIELDS = ["hash_key","title","category","source_title","source_url","is_https","url_list","url_tld","published_date","published_date_str","published_date_int","published_time_raw","published_time_struct","published_year","published_year_month","link","guidislink","num_sub_article","num_links","language_title","language_summary","source_in_title","id"]
 
 log_filename = "log"
 language = "en"
 country = "US"
 
-main_path = mv.query_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_1_query_main/"+env
-filename = mv.query_filename  #  "reduction_test"
-
-scarp_path = mv.scarp_path  #  "C:/Users/User/OneDrive/Desktop/article/files_3/1_2_scarp_main/"+env
-scarp_filename = mv.scarp_filename
-
-join1_path = mv.join1_path
-join1_filename = mv.join1_filename
-
-join2_path = mv.join2_path
-join2_filename = mv.join2_filename
-
-embdedding_path=mv.embdedding_path
-embdedding_filename=mv.embdedding_filename
-
-embdedding_path_raw = mv.embdedding_path_raw
-embdedding_filename_raw = mv.embdedding_filename_raw
-
-keyword_path = mv.keyword_path
-keyword_filename = mv.keyword_filename
-
-join2_path = mv.join2_path
-join2_filename = mv.join2_filename
-
-
-
-# path_union_stat = join1_path"C:/Users/User/OneDrive/Desktop/article/files_3/1_4_join_main/"+env
-# filename_union_stat = join1_filename"join_main_test-filter"
-
-# llm_result = "C:/Users/User/OneDrive/Desktop/article/file_2/test_llm_output/new_embedding/"
-
-# llm_join_out = "C:/Users/User/OneDrive/Desktop/article/file_2/join_2_df/"
-# llm_join_out_filename = "article_stats_embedding"
-
-
 ################################## QUERRY TO GET ARTICLE LIST
 
 gn = GoogleNews(lang = language, country = country)
-log_file = open(main_path+log_filename+".txt", "a", encoding="utf-8")
+log_file = open(mv.query_path+log_filename+".txt", "a", encoding="utf-8")
 
 def getHeadlindTopic(gn, search = True, topic_sel=1, date1 = '2015-01-01', date2 = '2016-01-01') :
     if search :
@@ -219,15 +182,17 @@ def addToDFHeadlinesParamList(gn, topic_list=[0], date_list_1 = ['2015-01-01'], 
             log("     - Sample num "+str(j+1)+" done ("+str(ar_count)+" articles found)")
     if save :
         if display :
-            log(" - Saving result table : '"+str(main_path)+str(filename)+"_"+iteration_str+".csv'")
-        # df_out = deleteUnnamed(df_out,"hash_key")
-        # df_out = df_out.set_index('hash_key')
-        saveDFcsv(df_out, main_path, filename+"_"+iteration_str,False)
+            log(" - Saving result table : '"+str(mv.query_path)+str(mv.query_filename)+"_"+iteration_str+".csv'")
+        saveDFcsv(df_out, mv.query_path, mv.query_filename+"_"+iteration_str,False)
     if display :
         logEndWorkflow(df_out.shape[0], expected_article)
     return df_out
 
-def loop_scraping(number_topics=8, startDate='2010-01-01', endDate='2024-01-01', sampling_1=14, sampling_2=6, display=True,save_steps=True,save_final=True):
+def loop_scraping(number_topics=8, startDate='2010-01-01', endDate='2024-01-01', sampling_1=14, sampling_2=6, display=True,save_steps=True,save_final=True,feilds="s"): # feilds (s=standard) (m=min) (a=all)
+    if feilds=="m" :
+        _STANDARD_SCRAPPING_FIELDS=_MIN_SCRAPPING_FIELDS
+    if feilds=="a" :
+        _STANDARD_SCRAPPING_FIELDS=_ALL_SCRAPPING_FIELDS
     total_article_count = 0
     topic_list = list(range(0,number_topics))
     date_list_start, date_list_end = splitDateList(generateDateList(startDate=startDate, endDate=endDate,sampling=sampling_1))
@@ -241,11 +206,9 @@ def loop_scraping(number_topics=8, startDate='2010-01-01', endDate='2024-01-01',
         df_out = pd.concat([df_out, df], ignore_index=True)
     logEndWorkflow(total_article_count, expected_article*sampling_2,True)
     if save_final :
-        # saveDFcsv(df_out, main_path, filename+"_final",False)
-        # df_out = df_out.set_index('hash_key')
         df_out = deleteUnnamed(df_out,"hash_key")
-        saveDFcsv(df_out, main_path, filename,False)
-        print("Final file saved here :",main_path)
+        saveDFcsv(df_out, mv.query_path, mv.query_filename,False)
+        print("Final file saved here :",mv.query_path)
     return df_out
 
 ################################## LOGS
@@ -313,71 +276,10 @@ def log(string, print_str=True, log_str=True):
         
 ################################## STATS CALC
 
-def calculateStatsLength(df,groupping,display_df=True):
-    #rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}
-    rename_dict = {"tb.char":"char_n","tb.sent":"sentence_n","tb.noun":"noun_n","tb.word":"words_n"}
-    df = df.rename(columns=rename_dict)
-    list_of_len_fields=list(rename_dict.values())
-    # df_group = df[[groupping,"char_n","sentence_n","noun_n","words_n"]].groupby(groupping).sum(["char_n","sentence_n","noun_n","words_n"])
-    df_group = df[[groupping]+list_of_len_fields].groupby(groupping).sum(list_of_len_fields)
-    df_count = df[groupping].value_counts().to_frame("count")#
-    df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
-    df_main[["char_per_count","sentence_per_count","noun_per_count","word_per_count"]] = df_main[list_of_len_fields].div(df_main['count'], axis=0).astype(float)
-    df_main[["char_per_sentence","noun_per_sentence","word_per_sentence"]] = df_main[["char_n","noun_n","words_n"]].div(df_main["sentence_n"], axis=0).astype(float)
-    df_main[["char_per_word"]] = df_main[["char_n"]].div(df_main["words_n"], axis=0).astype(float)
-    df_main = df_main.sort_values(by=["count"],ascending=True)
-    if display_df :
-        print("Dataframe Statistics Length Column :'"+groupping+"'")
-        display(df_main)
-    return df_main
-
-def calculateStatsNLP(df,groupping,display_df=True,display_stats=False,out_raw=False):
-    # rename_dict = {"tb.pol":"Polarity","tb.sub":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
-    rename_dict = {"tb.polaj":"polarity","tb.sub":"subjectivity","al.pos":"positivity","al.neg":"negativity"}
-    df = df.rename(columns=rename_dict)
-    column_list = list(rename_dict.values())
-    column_list_ajusted = []
-    for field_count in column_list :
-        if display_stats :
-            print(field_count," ",getStatsFromCol(df,field_count))
-        df[field_count+"_aj"] = (df[field_count]-getStatsFromCol(df,field_count)[0])/getStatsFromCol(df,field_count)[2]
-        column_list_ajusted.append(field_count+"_aj")
-    if out_raw :
-        df_main = df
-    else :
-        column_list = column_list + column_list_ajusted
-        df_group = df[[groupping]+column_list].groupby(groupping).sum(column_list)
-        df_count = df[groupping].value_counts().to_frame("count")#
-        df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
-        list_field_count = []
-        for field in column_list :
-            list_field_count.append(field+"_per_count")
-        df_main[list_field_count] = df_main[column_list].div(df_main['count'], axis=0).astype(float)
-        # df_main = df_main.sort_values(by=["count"],ascending=True)
-        df_main = df_main.sort_values(by=[groupping],ascending=True)
-    if display_df :
-        print("Dataframe Statistics NLP Column :'"+groupping+"'")
-        display(df_main)
-    return df_main
-
-def getStatsFromCol(df, column) :
-    min_val = df[column].min()
-    max_val = df[column].max()
-    return min_val,max_val,max_val-min_val
-
-def calculateStatsColList(df, column_list=[],stat_type="len",display_df=True,display_stats=False,out_raw=False):# ,stat_type="nlp"
-    df_list_out = []
-    for col in column_list :
-        if stat_type=="len":
-            df_app = calculateStatsLength(df,col,display_df)
-            df_list_out.append(df_app)
-        if stat_type=="nlp":
-            df_app = calculateStatsNLP(df,col,display_df,display_stats,out_raw)
-            df_list_out.append(df_app)
-    return df_list_out
 
 
-################################## UTILS ?
+
+################################## UTILS 
 
 
 def generateDateList(startDate='2015-01-01', endDate='2020-01-01', sampling=10, includeEnd=True):
@@ -419,7 +321,8 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
     source_limit = min(source_limit,len(df_source))
     source_limiy_count = int(df_source.iloc[[int(-source_limit)]]["count"].tolist()[0])
     df_source = df_source[df_source['count'].between(source_limiy_count, 1000000)]
-
+    print(type(df_source))
+    print(df_source)
     df_date_year_month = df[time_field].value_counts().to_frame("count").sort_values(by=[time_field],ascending=True)
     axes[1].tick_params(labelcolor='black', labelright=True, labelleft=False)
     axes[1].invert_yaxis()
@@ -428,13 +331,7 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
     plot = df_date_year_month.plot.barh(y='count',use_index=True,ax=axes[1], legend=False, ylabel="", fontsize= 8, title="Volume month/year") #, figsize=(5, 5)
     plot = df_category.plot.pie(y='count',use_index=True, legend=False, ylabel="", title="Distribution of categories") #, figsize=(5, 5)
     
-    
-################################## MAIN JOINS
-
-
-
-
-
+    return plot
 
 
 ################################## FILTERS AND SELECTION
@@ -455,24 +352,15 @@ def filterQuerryDataset(thd_high=5000,thd_low=30, display_stats=True,display_end
     df = openDFcsv(mv.query_path,mv.query_filename)
     ser_source = df['source_title'].value_counts() #.to_frame("count").sort_values(by=['count'],ascending=False)
     if thd_high > 0 and thd_high < 1 :
-    #print(float(len(ser_source))*float(thd_high))
         thd_high = ser_source[int(float(len(ser_source))*float(thd_high))]
-        # print(type(ser_source))
-        # print(type(ser_source.values()))
-        # print(list(ser_source.values())[int(float(len(ser_source))*float(thd_high))])
-        
     ser_source_low = ser_source[ser_source < thd_low]
     ser_source_high = ser_source[ser_source > thd_high]
     list_source_low = list(ser_source_low.keys())
     list_source_high = list(ser_source_high.keys())
     df_wo_low = df[~df['source_title'].isin(list_source_low)]
     df_only_low = df[df['source_title'].isin(list_source_low)]
-    # df_wo_high = df[~df['source_title'].isin(list_source_high)]
     df_only_high = df[df['source_title'].isin(list_source_high)]
     df_wo_low_high = df[~df['source_title'].isin(list_source_low+list_source_high)]
-    # ser_source_wo_low = df_wo_low['source_title'].value_counts()
-    # ser_source_wo_high = df_wo_high['source_title'].value_counts()
-    # ser_source_only_high = df_only_high['source_title'].value_counts()
     df_high_start = getStandardDfInput(list(df.columns))
     for source_high in list_source_high :
         newdf = df.loc[(df['source_title'] == source_high)].sort_values(by=["hash_key"],ascending=False).head(thd_high)
@@ -489,9 +377,9 @@ def filterQuerryDataset(thd_high=5000,thd_low=30, display_stats=True,display_end
         print(final_df['source_title'].value_counts())
     if save :
         df = deleteUnnamed(df,"hash_key")
-        saveDFcsv(df,main_path,filename+"_backup_before_filter",True)
+        saveDFcsv(df,mv.query_path,mv.query_filename+"_backup_before_filter",True)
         final_df = deleteUnnamed(final_df,"hash_key")
-        saveDFcsv(final_df,main_path,filename,True)
+        saveDFcsv(final_df,mv.query_path,mv.query_filename,True)
     return final_df
 
 
@@ -512,19 +400,7 @@ def displayDFsourceLoss(label=" - LOSS -      ",entry_ct_list=[],unique_ct_list=
     print(label,{"Articles sum":str(entry_ct_list[0]-entry_ct_list[1])+" (" + calculatePct(entry_ct_list[1],entry_ct_list[0],ajust_for_denom=1)+"%)",
                  "Unique sources :":str(unique_ct_list[0]-unique_ct_list[1])+" (" + calculatePct(unique_ct_list[1],unique_ct_list[0],ajust_for_denom=1)+"%)",
                  "Unique/Sum":calculateRatio(entry_ct_list[0],unique_ct_list[0]) + " -> " + calculateRatio(entry_ct_list[1],unique_ct_list[1])})
-    # return num_entry, num_unique
     
 
-    
-def mainJoinOut() :
-    df = openDFcsv(keyword_path,keyword_filename)
-    df_out = ekml.generateNLPonKeywords(df,0,df.shape[0],True)
-    # df_out = deleteUnnamed(df_out,"hash_key")
-    saveDFcsv(df_out, join2_path,join2_filename)
-    return df_out
     
 print("IMPORT : article_scraping_lib")
-
-# df = getStandardDf(_STANDARD_SCRAPPING_FIELDS)
-# df2 = fullWorkflow(gn,df,True)
-# display(df2)

@@ -39,10 +39,22 @@ class main_var :
         self.delete_files_in_directory(self.scarp_path)
         self.delete_files_in_directory(self.article_path)
         self.delete_files_in_directory(self.join1_path)
-        self.delete_files_in_directory(self.embdedding_path_raw)
         self.delete_files_in_directory(self.embdedding_path)
+        self.delete_files_in_directory(self.embdedding_path_raw)
         self.delete_files_in_directory(self.completion_path)
         self.delete_files_in_directory(self.join2_path)
+        self.delete_files_in_directory(self.visu_path)
+        
+    def creareFolders(self) :
+        self.create_folder(self.query_path)
+        self.create_folder(self.scarp_path)
+        self.create_folder(self.article_path)
+        self.create_folder(self.join1_path)
+        self.create_folder(self.embdedding_path)
+        self.create_folder(self.embdedding_path_raw)
+        self.create_folder(self.completion_path)
+        self.create_folder(self.join2_path)
+        self.create_folder(self.visu_path)
 
     def delete_files_in_directory(self,directory_path):
        try:
@@ -54,10 +66,22 @@ class main_var :
          print("All files deleted successfully.")
        except OSError:
          print("Error occurred while deleting files.")
+    
+    def create_folder(self,directory_path) :
+        try:
+          os.mkdir(directory_path)
+          print("Folder created successfully.")
+        except OSError:
+          print("Error occurred while creating the folder.")
 
+def initFolderTree(main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/test/" ,env=".main/"):
+    mv = main_var(main_path,"")
+    mv.create_folder(main_path)
+    mv.creareFolders()
+    mv2 = main_var(main_path,env)
+    mv2.creareFolders()
+    
+print("IMPORT : main_var")
 
-print("IMPORT : main_var ")
-
-
-# mv = main_var()
+# initFolderTree()
 # mv.cleanFolders()

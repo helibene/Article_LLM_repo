@@ -5,19 +5,7 @@ Created on Wed Feb 28 01:52:05 2024
 @author: Alexandre
 """
 
-from newspaper import Article, ArticleException
-import nltk
-import os
-import time
-from pygooglenews import GoogleNews
-import json
-import pandas as pd
-from dateparser import parse as parse_date
-from datetime import date, datetime, timedelta
-import matplotlib.pyplot as plt
 
-from setuptools import setup
-from torch.utils.cpp_extension import BuildExtension, CppExtension
 
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
@@ -26,15 +14,28 @@ from textblob.sentiments import PatternAnalyzer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from transformers import logging
+from transformers import AutoTokenizer
 logging.set_verbosity_error()
 import warnings
 warnings.filterwarnings('ignore')
 from transformers import pipeline
 from transformers import AutoModelForSequenceClassification
-from transformers import TFAutoModelForSequenceClassification
-from transformers import AutoTokenizer, AutoConfig
 import numpy as np
 from scipy.special import softmax
+# from newspaper import Article, ArticleException
+# import nltk
+# import os
+# import time
+# from pygooglenews import GoogleNews
+# import json
+# import pandas as pd
+# from dateparser import parse as parse_date
+# from datetime import date, datetime, timedelta
+# import matplotlib.pyplot as plt
+# from setuptools import setup
+# from torch.utils.cpp_extension import BuildExtension, CppExtension
+# from transformers import TFAutoModelForSequenceClassification
+# from transformers import AutoTokenizer, AutoConfig
 
 MODEL_ID = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 MIN_NUM_SENTENCES = 2
@@ -106,10 +107,6 @@ class text_analysis :
             dict_out["vs.comp"] = vs["compound"]
         if ret_list[2] :
             dict_out = dict_out | self.test_sent(text)
-            # print(len(text))
-            # sp = self.tf_sentiment_pipeline(text)
-            # dict_out["ts.neg"] = sp[0][0]['score']
-            # dict_out["ts.pos"] = sp[0][1]['score']
         if ret_list[0] and ret_list[1] and ret_list[2] and ret_list[3] :
             dict_out["tb.class"] = bool(dict_out["tb.neg"]<dict_out["tb.pos"])
             dict_out["vs.class"] = bool(dict_out["vs.neg"]<dict_out["vs.pos"])
@@ -127,7 +124,6 @@ class text_analysis :
     
     def analyseArticle(self, text) :
         disp = True
-        # article_status = ""
         textblob = TextBlob(text)
         sentences_list = textblob.sentences
         dict_list = []
@@ -155,40 +151,10 @@ class text_analysis :
                         sent_count = sent_count + 1
                 else :
                     pass
-                    # print("lv2_"+str(sent_len))
         else :
             pass
-            # print("lv1_"+str(sent_len))
-        #     # lenStats()
-        #     return self.subpolStats(text)
-        # else:
-        #     for sentence in sentences_list :
-        #         sent_len = len(sentence.words)
-        #         if sent_len < MAX_SENTENCE_LEN and sent_len > MIN_SENTENCE_LEN :
-        #             big_word_valid=True
-        #             # for w in sentence.words :
-        #                 # if len(w) > MAX_SENTENCE_CHAR_LEN :
-        #                 #     big_word_valid = False
-        #                     # print("big_word_valid FALSE")
-        #                     #print(w)
-                    
-        #         else :
-        #             pass
-        #             # if disp :
-        #             #     print("MAX_SENTENCE_LEN_or_MIN_SENTENCE_LEN WARNNING")
-        #     else :
-        #         pass
-        #         # if disp :
-        #         #     print("LOW_NUM_SENTENCES_or_MAX_NUM_SENTENCES ERROR")
-        # print(100*sent_count/len(sentences_list))
         out_dict = self.weigthAverage(dict_list,len_list)
         return out_dict | self.lenStats(text)
-    
-    
-        # if len(sentences_list)<MIN_NUM_SENTENCES :
-        #     article_status = article_status + "_LOW_NUM_SENTENCES_"
-        # if len(sentences_list)>MAX_NUM_SENTENCES :
-        #     article_status = article_status + "_HIGH_NUM_SENTENCES_"
             
     def weigthAverage(self,dict_list,len_list):
         if len(dict_list) != 0 and len(len_list) != 0 and sum(len_list) !=0 :

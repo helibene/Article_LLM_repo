@@ -6,41 +6,28 @@ Created on Thu Mar 21 19:25:29 2024
 """
 import main_var
 mv = main_var.main_var()
-
 from newspaper import Article, ArticleException
-import nltk
-import os
-import time
-from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,deleteUnnamed,display_df
+from utils_art import openDFcsv,saveDFcsv,deleteUnnamed,saveSTRtxt,display_df
 import hashlib
-from dateparser import parse as parse_date
 import pandas as pd
-from datetime import date, datetime, timedelta
 import text_analysis
-from pathlib import Path
-import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 ts = text_analysis.text_analysis()
 from transformers import logging
 logging.set_verbosity_error()
-
+# import nltk
+# import os
+# import time
+# from dateparser import parse as parse_date
+# from datetime import date, datetime, timedelta
+# from pathlib import Path
+# import numpy as np
+# _SELECTION = 3
 
 # All columns : ["html", "title", "authors", "publish_date", "text", "top_image", "images", "movies", "keywords", "summary"]
 _PARSING_COL_SELECTION = ["title", "authors","keywords", "text"] #,"summary" ######, "publish_date"
-
-
-_SELECTION = 3
 _LOAD_NLP = True
-
-open_path = mv.query_path  #  "C:/Users/User/OneDrive/Desktop/article/files_3/1_1_query_main/"+env
-filename_input = mv.query_filename # "query_main_final"#"query_large_2010_to_2023"#"query_main_final"
-
-save_path = mv.scarp_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_2_scarp_main/"+env #parssing_df_main/
-filename_out = mv.scarp_filename
-
-save_path_article = mv.article_path   #   "C:/Users/User/OneDrive/Desktop/article/files_3/1_3_article_main/"+env #article_download_main_2
-# output_fields = ["url", "pk", "hash_key", "title", "authors", "publish_date", "keywords_list", "text_len","valid"]# + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"], "summary"
 output_fields = ['url', 'pk', 'hash_key', 'title', 'authors', 'valid', 'text_len', 'keywords_list'] + ["tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.polaj", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neg"]#, "summary" ####'publish_date',
 
 
@@ -154,7 +141,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
                 print(" - STOP - Generate NLP and length indicators using  'text_analysis' module  #"+str(increment)+"  ("+str(hash_key)+")")
             if saveArticle :
                 dict_for_save = {"hash_key":hash_key,"text":text}
-                articleDictToFile(dict_for_save, save_path_article)
+                articleDictToFile(dict_for_save, mv.article_path)
                 del text
         else :
             valid = False
@@ -178,7 +165,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
         return out_dict
         
 
-def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_df=False,step_pct=0.1,add_nlp=1,filtered_input_df=False): ####, "publish_date"
+def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_final=True,save_steps=False,display_data=False,step_pct=0.1,add_nlp=1,filtered_input_df=False): ####, "publish_date"
     stat_field_selection0 = ["url", "pk", "hash_key", "title", "authors", "keywords_list","summary", "text_len","valid"]
     stat_field_selection1 = ['url', 'pk', 'hash_key', "title", "authors", 'keywords_list', 'text_len', 'valid', 'tb.sent', 'tb.noun', 'tb.word', 'tb.char']
     stat_field_selection2 = ["url", "pk", "hash_key", "title", "authors", "keywords_list", "text_len", "valid", "tb.sent", "tb.noun", "tb.word", "tb.char", "tb.pol", "tb.sub", "tb.pos", "tb.neg", "vs.pos", "vs.neu", "vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg"]#,"tb.class","vs.class","vs.class","al.pos","al.neg"], "tb.polaj"
@@ -189,27 +176,27 @@ def readArticleFileTable(index_from=0,index_to=99999999,save_articles=True,save_
     if add_nlp == 2 :
         stat_field = stat_field_selection2
     df = pd.DataFrame([], columns = stat_field)
-    df_input = openDFcsv(open_path, filename_input)
+    df_input = openDFcsv(mv.query_path, mv.query_filename)
     index_to = min(index_to,df_input.shape[0])
     df_input_url = df_input["link"][index_from:index_to]
     art_count = 0
     for url_entry in df_input_url:
-        ar_list = readStatsFromURL(url_entry,save_articles,display_df,art_count,add_nlp)
+        ar_list = readStatsFromURL(url_entry,save_articles,display_data,art_count,add_nlp)
         # ar_list["publish_date"] = "ccc"
         df = addDictToDF(df,ar_list)
         art_count = art_count + 1
         if (art_count%int((index_to-index_from)*step_pct) == 0 or art_count==len(df_input_url)) and save_steps :
             df_out = df[stat_field]
             df_out = deleteUnnamed(df_out,"hash_key")
-            saveDFcsv(df_out, save_path, filename_out+"_"+str(art_count)) # , mode="w"
+            saveDFcsv(df_out, mv.scarp_path, mv.scarp_filename+"_"+str(art_count)) # , mode="w"
         
     if save_final :
         df = df[stat_field]
         df = deleteUnnamed(df,"hash_key")
-        saveDFcsv(df, save_path, filename_out,True) # , mode="w"
-        print("Final file saved here :",save_path)
-    if display_df :
-        display(df)
+        saveDFcsv(df, mv.scarp_path, mv.scarp_filename,True) # , mode="w"
+        print("Final file saved here :",mv.scarp_path)
+    if display_data :
+        display_df(df)
     return df
 
 def fillDFwithListList(df, ar_list):

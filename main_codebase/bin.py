@@ -428,6 +428,70 @@ Created on Sat Mar 30 00:05:32 2024
 # df2 = fullWorkflow(gn,df,True)
 # display(df2)
 
+# def calculateStatsNLP(df,groupping,display_data=True,display_stats=True,out_raw=False,only_keyword_nlp=False,sort_by_groupping=True):
+#     # rename_dict = {"tb.pol":"Polarity","tb.sub":"Subjectivity","pos1":"Positivity","neu1":"Neutrality","neg1":"Negativity","pos2":"Positivity2","neg2":"Negativity2","compound":"Compound"}
+#     # Ajusting NLP values (0 to 1)
+#     nlp_col_list = ["tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","tb.pol_k","tb.sub_k","tb.polaj","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k","0_tsne","1_tsne","2_tsne","0_pca","1_pca","2_pca","0_ipca","1_ipca","2_ipca","0_tnn","1_tnn","2_tnn"]
+
+#     input_col_list = list(df.columns)
+#     column_list_ajusted = []
+#     nlp_col_list_val = []
+#     for nlp_col in nlp_col_list :
+#         if nlp_col in input_col_list :
+#             if display_stats :
+#                 print(nlp_col," ",getStatsFromCol(df,nlp_col))
+#             df[nlp_col+"_aju"] = (df[nlp_col]-getStatsFromCol(df,nlp_col)[0])/getStatsFromCol(df,nlp_col)[2]
+#             column_list_ajusted.append(nlp_col+"_aju")
+#             nlp_col_list_val.append(nlp_col)
+    
+#     if out_raw :
+#         df_main = df
+#     else :
+#         column_list = nlp_col_list_val + column_list_ajusted
+#         df_group = df[[groupping]+column_list].groupby(groupping).sum(column_list)
+#         df_count = df[groupping].value_counts().to_frame("count")#
+#         display_df(df_count)
+#         display_df(df_group)
+#         df_group=df_group.sort_values(by=[groupping],ascending=True)
+#         df_count=df_count.sort_values(by=[groupping],ascending=True)
+#         df_main = df_group.join(df_count, how="inner",on=groupping).sort_values(by=['count'],ascending=True)
+#         df_main=df_main.sort_values(by=[groupping],ascending=True)
+#         list_field_count = []
+#         for field in column_list :
+#             list_field_count.append(field+"_avg")
+#         df_main = df_main[column_list].div(df_main['count'], axis=0).astype(float)#[list_field_count]
+#         df_main=df_main.sort_values(by=[groupping],ascending=True)
+#         df_main = df_main.join(df_count, how="inner",on=groupping,lsuffix="_old",rsuffix='_new')
+#         if sort_by_groupping :
+#             df_main = df_main.sort_values(by=[groupping],ascending=True)
+#         else:
+#             df_main = df_main.sort_values(by=["count"],ascending=True)
+#     for col in column_list_ajusted :
+#         df_main[col] = (df_main[col]-getStatsFromCol(df_main,col)[0])/getStatsFromCol(df_main,col)[2]
+#     if display_data :
+#         print("Dataframe Statistics NLP Column :'"+groupping+"'")
+#         display_df(df_main)
+#     return df_main
+# def calculateStatsLength(df,groupping,display_data=True):
+#     #rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}
+#     rename_dict = {"tb.char":"char_n","tb.sent":"sentence_n","tb.noun":"noun_n","tb.word":"words_n"}
+#     df = df.rename(columns=rename_dict)
+#     list_of_len_fields=list(rename_dict.values())
+#     # df_group = df[[groupping,"char_n","sentence_n","noun_n","words_n"]].groupby(groupping).sum(["char_n","sentence_n","noun_n","words_n"])
+#     #                                        df_group = df[[groupping]+list_of_len_fields].groupby(groupping).sum(list_of_len_fields)
+#     df_group = df[groupping+list_of_len_fields].groupby(groupping).sum(list_of_len_fields)
+#     df_count = df[groupping].value_counts().to_frame("count")#
+#     df_main = df_group.join(df_count, how="inner",on=groupping)                 #.sort_values(by=['count'],ascending=True)
+#     df_main[["char_per_count","sentence_per_count","noun_per_count","word_per_count"]] = df_main[list_of_len_fields].div(df_main['count'], axis=0).astype(float)
+#     df_main[["char_per_sentence","noun_per_sentence","word_per_sentence"]] = df_main[["char_n","noun_n","words_n"]].div(df_main["sentence_n"], axis=0).astype(float)
+#     df_main[["char_per_word"]] = df_main[["char_n"]].div(df_main["words_n"], axis=0).astype(float)
+#     #                        df_main = df_main.sort_values(by=["count"],ascending=True)
+#     df_main = df_main.sort_values(by=[groupping],ascending=True)
+#     df_main = df_main.reset_index()
+#     if display_data : 
+#         print("Dataframe Statistics Length Column :'"+str(groupping)+"'")
+#         display_df(df_main)
+#     return df_main
 
 # def calculateStatsLength(df,groupping,display_df=True):
 #     #rename_dict = {"text_len":"char_n","sentences":"sentence_n","noun_phrases":"noun_n","words":"words_n"}

@@ -7,7 +7,7 @@ Created on Thu Mar 21 20:14:51 2024
 import os
 
 class main_var :
-    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/" ,env=".main/"):#"test_new/"test_new4  ".main/"
+    def __init__(self,main_path="C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/" ,env=".main_wip/"):#"test_new/"test_new4  ".main/"
         self.main_path = main_path
         self.env = env
         self.query_path = self.main_path+"1_1_query_main/"+self.env

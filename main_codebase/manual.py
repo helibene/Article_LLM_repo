@@ -14,6 +14,10 @@ Created on Thu May  9 14:38:51 2024
 #unionFiles(main_folder,"join10",main_folder,file3,main_folder,"join20")
 
 
+from utils_art import select_articles
+main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_3_article_main/.main/"
+out=select_articles(main_folder)
+#print(out)
 # saveStats()
 # df = generateDimReducedDF(n_components=3, norm_output=True, active_sel=[True,True,True,True])
 # print(df)
@@ -22,17 +26,18 @@ Created on Thu May  9 14:38:51 2024
 # import plotly.express as px
 # import pandas as pd
 
-import main_var
-mv = main_var.main_var()
-from dimension_reduc_lib import calculateStatsNLP2,calculateStatsLength2
-from utils_art import openDFcsv,saveDFcsv
-agg_list = ["category","year","source_title"]#,["year","category"],["year","source_title"]]
-df_main = openDFcsv(mv.join2_path,mv.join2_filename)
-for agg in agg_list :
-    df_nlp = calculateStatsNLP2(df_main,agg)
-    df_len = calculateStatsLength2(df_main,agg)
-    df_stats = df_nlp.join(df_len, how="inner",on=agg,lsuffix="_nlp",rsuffix='_len')
-    saveDFcsv(df_stats,mv.visu_path,mv.visu_filename+"_"+str(agg))
+# import main_var
+# mv = main_var.main_var()
+# from dimension_reduc_lib import calculateStatsNLP2,calculateStatsLength2
+# from utils_art import openDFcsv,saveDFcsv
+# agg_list = ["category","year","source_title"]#,["year","category"],["year","source_title"]]
+# df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# for agg in agg_list :
+#     df_nlp = calculateStatsNLP2(df_main,agg)
+#     df_len = calculateStatsLength2(df_main,agg)
+#     df_stats = df_nlp.join(df_len, how="inner",on=agg,lsuffix="_nlp",rsuffix='_len')
+#     saveDFcsv(df_stats,mv.visu_path,mv.visu_filename+"_"+str(agg))
+
 #df_stats = calculateStatsNLP2(df_main,["year","category"])#year_month
 #df_stats = calculateStatsNLP2(df_main,"source_title")#year_month
 # print(list(df_stats.columns))

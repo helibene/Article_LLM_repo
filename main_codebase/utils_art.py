@@ -132,5 +132,31 @@ def unionFiles(path1="",filename1="",path2="",filename2="",savePath="",saveFilen
         saveDFcsv(file_out,savePath,saveFilename)
     return file_out
 
+
+def select_articles(directory_path,min_char=0,max_char=600,str_lookup="your activity and behavior on this site made us think that you are a bot",max_sel=99999999999): # "have permission to edit" "AI assistant is fun to use"
+    out_list = []
+    try:
+        files = os.listdir(directory_path)
+        count=0
+        valid=True
+        while valid and count<len(files):
+            file=files[count]
+            file_path = os.path.join(directory_path, file)
+            if os.path.isfile(file_path):
+                #print(file)
+                file_raw = file.replace(".txt","")
+                data = openSTRtxt(directory_path,file_raw)
+                data = str(data)
+                if (len(data)>min_char and len(data)<max_char) or str_lookup in data :
+                    out_list.append(file_raw)
+            count=count+1
+            if count>max_sel :
+                valid=False
+    except OSError:
+        print("Error occurred while reading files.")
+    print(out_list)
+    print("Articles lookedup :",count,"  Article Selected :",len(out_list))
+    return out_list
+
 print("IMPORT : utils_art")
 

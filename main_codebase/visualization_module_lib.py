@@ -17,6 +17,7 @@ from matplotlib import cm
 from random import randint
 import random
 import colorsys
+import copy
 # from dimension_reduc_lib import calculateStatsNLP
 # import matplotlib.cm as cm
 # import ipywidgets as widgets
@@ -28,7 +29,7 @@ import colorsys
 # import time
 # import plotly
 
-PLOT_WIDTH=1800
+PLOT_WIDTH=1500
 PLOT_HEIGHT=1000
 PLOT_AUTOSIZE=False
 PLOT_RENDER_LIST = ["png","browser","svg"]
@@ -77,6 +78,7 @@ def renderAllOptions(df,confList=[]) :
     for conf in confList :
         main_conf = createdefconfdict()|conf
         main_conf["data_frame"]=df
+        print(main_conf)
         plt = plotWithConf(main_conf)
         plt_list.append(plt)
     return plt_list
@@ -194,7 +196,7 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
 #             scatter.marker.color = c
 #             scatter.marker.size = s
 
-def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],sentType=[False,False],posType=[False,False],length=False,exp=False,browser=True) :
+def getRenderLists(dimentions=[True,True],emmbeding=[False,False,False,False],sentType=[False,False],posType=[False,False],length=False,exp=True,browser=True) :
 
     base = {"x":None,"y":None,"z":None,"c":None,"size":None,"hover_name":None,"custom_data":None, #"custom_data":None,
                     "browser":browser,"facet_row":None,"facet_col":None,"facet_row_spacing":None,"facet_col_spacing":None,
@@ -204,8 +206,24 @@ def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],s
     _2d_test_2={"empty":True}
     _2d_test_3={"empty":True}
     _2d_test_4={"empty":True}
-    std2dScatter = {"plot_type":"scatter","trendline":"ols","opacity":0.9,"size":"count"} #'ols', 'lowess', 'rolling', 'expanding' or 'ewm',"size":"tb.sent"
-    std3dScatter = {"plot_type":"scatter_3d","size":"tb.sent","opacity":0.9}
+    _2d_test_5={"empty":True}
+    _2d_test_6={"empty":True}
+    _2d_test_7={"empty":True}
+    _2d_test_8={"empty":True}
+    _2d_test_9={"empty":True}
+    _3d_test_0={"empty":True}
+    _3d_test_1={"empty":True}
+    _3d_test_2={"empty":True}
+    _3d_test_3={"empty":True}
+    _3d_test_4={"empty":True}
+    _3d_test_5={"empty":True}
+    _3d_test_6={"empty":True}
+    _3d_test_7={"empty":True}
+    _3d_test_8={"empty":True}
+    _3d_test_9={"empty":True}
+    
+    std2dScatter = {"plot_type":"scatter","trendline":"ols","opacity":0.9,"size":"tb.char_ps"} #'ols', 'lowess', 'rolling', 'expanding' or 'ewm',"size":"tb.sent" ,"size":"count"
+    std3dScatter = {"plot_type":"scatter_3d","size":"tb.char_ps","opacity":0.9}
     std2dPie = {"plot_type":"pie","opacity":0.9,"hole":0.2}#,"hover_name":"category"
     std2dBar = {"plot_type":"bar","opacity":0.9, "text_auto":True}
     std2dScatterPolar = {"plot_type":"scatter_polar"}
@@ -218,16 +236,40 @@ def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],s
     std2dScatterMatrix = {"plot_type":"scatter_matrix"}
     std3dLine = {"plot_type":"line_3d"}
     std3dHistogram = {"plot_type":"histogram"}
-    
-    #_2d_test_0 = base|std2dSunburst|{"names":"category","title":"Sunburst of categories/source"} #"parents":"category" url_TLD
-    _2d_test_0 = base|std2dScatter|{"x":"tb.pol_aju","y":"tb.pol_k_aju","color":"category","title":"Scatter tb.pol_aju and tb.pol_k_aju"} #"parents":"category" url_TLD
-    _2d_test_1 = base|std2dScatter|{"x":"tb.sub_aju","y":"tb.sub_k_aju","color":"category","title":"Scatter tb.sub_aju and tb.sub_k_aju"} #"parents":"category" url_TLD
-    _2d_test_2 = base|std2dScatter|{"x":"tb.pos_aju","y":"tb.pos_k_aju","color":"category","title":"Scatter tb.pos_aju and tb.pos_k_aju"} #"parents":"category" url_TLD
-    _2d_test_4 = base|std2dScatter|{"x":"tb.neg_aju","y":"tb.neg_k_aju","color":"category","title":"Scatter tb.neg_aju and tb.neg_k_aju"} #"parents":"category" url_TLD
-    #_2d_test_3 = base|std2dLinePolar|{"r":"count","theta":"tb.sub_aju","color":"category","title":"Polar tb.pol_aju"} #"parents":"category" url_TLD
-    #_2d_test_3 = base|std2dSunburst|{"names":"category","title":"Sunburst of categories/source"} #"parents":"category" url_TLD
-    #_2d_test_3 =  base|std2dScatterMatrix|{"dimensions":"category","color":"category","title":"Matrix"}
-    _2d_test_3 =  base|std2dScatter|{"x":"tb.pol_aju","y":"tb.pol_k_aju","facet_row":"category","color":"category","title":"Matrix"}
+    std_cat = {"color":"category","animation_frame":"year","text":"category","animation_group":"category"}#,"range_x":[-0.15,1.15],"range_y":[-0.15,1.15],"range_z":[-0.15,1.15]} #"parents":"category" url_TLD   #
+    std_st = {"color":"source_title","animation_frame":"year","text":"source_title","animation_group":"source_title"}#,"range_x":[-0.15,1.15],"range_y":[-0.15,1.15],"range_z":[-0.15,1.15]} #"parents":"category" url_TLD#,"range_x":[-1,2],"range_y":[-1,2],"range_z":[-1,2]
+
+    # _2d_test_0 = base|std2dLine|{"x":"year","y":"tb.sent_pa","color":"category" ,"title":"line y = vs.comp_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    # _2d_test_1 = base|std2dLine|{"x":"year","y":"0_tsne","color":"category" ,"title":"line y = al.pos","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    # _2d_test_2 = base|std2dLine|{"x":"year","y":"0_pca","color":"category" ,"title":"line y = al.neg","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    #_2d_test_2 = base|std2dScatter|{"x":"0_tsne","y":"1_tsne","color":"category","title":"Scatter 0_tsne","animation_frame":"year","text":"category","animation_group":"category"} #"parents":"category" url_TLD
+    #_3d_test_2 = base|std3dScatter|{"x":"0_tsne","y":"1_tsne", "z":"2_tsne","color":"category","title":"Scatter plot of dimention reduced embeding data from articles- TSNE","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3"}
+    # _2d_test_0 = base|std2dScatter|std_cat|{"x":"0_tsne_aj","y":"1_tsne_aj","title":"Category : Scatter TSNE","xtitle":"0","ytitle":"1"} #"parents":"category" url_TLD
+    # _2d_test_1 = base|std2dScatter|std_cat|{"x":"0_pca_aj","y":"1_pca_aj","title":"Category : Scatter PCA","xtitle":"0","ytitle":"1"} #"parents":"category" url_TLD
+    # _2d_test_2 = base|std2dScatter|std_cat|{"x":"tb.pol_aj","y":"tb.sub_aj","title":"Category : Scatter Polarity/Subjectivity","xtitle":"Polarity","ytitle":"Subjectivity"} #"parents":"category" url_TLD
+    # _2d_test_3 = base|std2dScatter|std_cat|{"x":"al.pos_aj","y":"al.pos_k_aj","title":"Category : Scatter Positivity/Keyword","xtitle":"Positivity","ytitle":"Positivity from Keyword"} #"parents":"category" url_TLD
+    # _2d_test_0 = base|std2dScatter|std_st|{"x":"0_tsne_aj","y":"1_tsne_aj","title":"Source Title : Scatter TSNE"} #"parents":"category" url_TLD
+    # _2d_test_1 = base|std2dScatter|std_st|{"x":"0_pca_aj","y":"1_pca_aj","title":"Source Title : Scatter PCA"} #"parents":"category" url_TLD
+    # _2d_test_2 = base|std2dScatter|std_st|{"x":"tb.pol_aj","y":"tb.sub_aj","title":"Source Title : Scatter Polarity/Subjectivity","xtitle":"Polarity","ytitle":"Subjectivity"} #"parents":"category" url_TLD
+    # _2d_test_3 = base|std2dScatter|std_st|{"x":"al.pos_aj","y":"al.pos_k_aj","title":"Source Title : Scatter Positivity/Keyword","xtitle":"Positivity","ytitle":"Positivity from Keyword"} #"parents":"category" url_TLD
+
+    # _3d_test_0 = base|std3dScatter|stdCat|{"x":"0_tsne_aj","y":"1_tsne_aj", "z":"2_tsne_aj","title":"Scatter plot of dimention reduced embeding data from articles- TSNE","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3"}
+    # _3d_test_1 = base|std3dScatter|stdCat|{"x":"0_pca_aj","y":"1_pca_aj", "z":"2_pca_aj","title":"Scatter plot of dimention reduced embeding data from articles- PCA","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3"}
+    # _3d_test_2 = base|std3dLine|{"x":"0_pca_aj","y":"1_pca_aj", "z":"year","color":"source_title","title":"std3dLine","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3","markers":True}
+
+    _2d_test_0 = base|std2dLine|{"x":"year_month","y":"tb.pol_aj","color":"category" ,"title":"line y = tb.pol_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    _2d_test_1 = base|std2dLine|{"x":"year_month","y":"tb.sub_aj","color":"category" ,"title":"line y = tb.sub_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    _2d_test_2 = base|std2dLine|{"x":"year_month","y":"al.pos_aj","color":"category" ,"title":"line y = al.pos_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+
+    # #_2d_test_0 = base|std2dSunburst|{"names":"category","title":"Sunburst of categories/source"} #"parents":"category" url_TLD
+    # _2d_test_0 = base|std2dScatter|{"x":"tb.pol_aj","y":"tb.pol_k_aj","color":"category","title":"Scatter tb.pol_aj and tb.pol_k_aj"} #"parents":"category" url_TLD
+    # _2d_test_1 = base|std2dScatter|{"x":"tb.sub_aj","y":"tb.sub_k_aj","color":"category","title":"Scatter tb.sub_aj and tb.sub_k_aj"} #"parents":"category" url_TLD
+    # _2d_test_2 = base|std2dScatter|{"x":"tb.pos_aj","y":"tb.pos_k_aj","color":"category","title":"Scatter tb.pos_aj and tb.pos_k_aj"} #"parents":"category" url_TLD
+    # _2d_test_4 = base|std2dScatter|{"x":"tb.neg_aj","y":"tb.neg_k_aj","color":"category","title":"Scatter tb.neg_aj and tb.neg_k_aj"} #"parents":"category" url_TLD
+    # #_2d_test_3 = base|std2dLinePolar|{"r":"count","theta":"tb.sub_aj","color":"category","title":"Polar tb.pol_aj"} #"parents":"category" url_TLD
+    # #_2d_test_3 = base|std2dSunburst|{"names":"category","title":"Sunburst of categories/source"} #"parents":"category" url_TLD
+    # #_2d_test_3 =  base|std2dScatterMatrix|{"dimensions":"category","color":"category","title":"Matrix"}
+    # _2d_test_3 =  base|std2dScatter|{"x":"tb.pol_aj","y":"tb.pol_k_aj","facet_row":"category","color":"category","title":"Matrix"}
    
     _2d_pie_0 = base|std2dPie|{"values":"tb.sent","names":"category","title":"Pie of categories","color_discrete_sequence":px.colors.sequential.RdBu}
     _2d_pie_1 = base|std2dPie|{"values":"tb.sent","names":"url_TLD","title":"Pie of categories","color_discrete_sequence":px.colors.sequential.RdBu}
@@ -241,7 +283,7 @@ def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],s
     _2d_histogram_2 = base|std3dHistogram|{"x":"year_month","y":"ts.neg_k","color":"category","barmode":"relative","title":"y = ts.neg","xtitle":"time","ytitle":"volume","histfunc":'avg'} #,"marginal":"rug","histfunc":'avg'} #histnorm='percent' "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year"
     _2d_histogram_3 = base|std3dHistogram|{"x":"year_month","y":"tb.sent","color":"category","barmode":"relative","title":"y = tb.sent","xtitle":"time","ytitle":"volume","histfunc":'avg'} #,"marginal":"rug","histfunc":'avg'} #histnorm='percent' "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year"
     
-    _2d_line_0 = base|std2dLine|{"x":"year_month","y":"tb.sent","title":"line y = ts.pos","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group'} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" ,"color":"category"
+    #_2d_line_0 = base|std2dLine|{"x":"year_month","y":"tb.sent","title":"line y = ts.pos","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group'} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" ,"color":"category"
     #_2d_scatterMatrix_0 =  base|std2dScatterMatrix|{"dimensions":["tb.pol","tb.pol_k","tb.sub","tb.sub_k"]}
     _2d_emmbeding_0 = base|std2dScatter|{"x":"0_tsne","y":"1_tsne","color":"category","title":"Scatter plot of dimention reduced embeding data from articles - TSNE","xtitle":"Component 1","ytitle":"Component 2"}
     _3d_emmbeding_0 = base|std3dScatter|{"x":"0_tsne","y":"1_tsne", "z":"2_tsne","color":"category","title":"Scatter plot of dimention reduced embeding data from articles- TSNE","xtitle":"Component 1","ytitle":"Component 2","ztitle":"Component 3"}
@@ -271,14 +313,14 @@ def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],s
     _3dList_out = [] 
     
     
-    _2dList_out = _2dList_out + [_2d_emmbeding_0]*emmbeding[0]+[_2d_emmbeding_1]*emmbeding[1]+[_2d_emmbeding_2]*emmbeding[2]+[_2d_emmbeding_3]*emmbeding[3]
-    _3dList_out = _3dList_out + [_3d_emmbeding_0]*emmbeding[0]+[_3d_emmbeding_1]*emmbeding[1]+[_3d_emmbeding_2]*emmbeding[2]+[_3d_emmbeding_3]*emmbeding[3]
-    _2dList_out = _2dList_out + [_2d_sent_0]*sentType[0]+[_2d_sent_1]*sentType[1]
-    _3dList_out = _3dList_out + [_3d_sent_0]*sentType[0]+[_3d_sent_1]*sentType[1]
-    _2dList_out = _2dList_out + [_2d_pos_0]*posType[0]+[_2d_pos_1]*posType[1]
-    _3dList_out = _3dList_out + [_3d_pos_0]*posType[0]+[_3d_pos_1]*posType[1]
-    _2dList_out = _2dList_out + [_2d_len]*length+[_2d_pie_0,_2d_histogram_0,_2d_histogram_1,_2d_histogram_2,_2d_histogram_3,_2d_pie_1,_2d_line_0]*exp ##_2d_bar_0,_2d_bar_1,_2d_bar_2,
-    _3dList_out = _3dList_out + [_3d_len]*length
+    # _2dList_out = _2dList_out + [_2d_emmbeding_0]*emmbeding[0]+[_2d_emmbeding_1]*emmbeding[1]+[_2d_emmbeding_2]*emmbeding[2]+[_2d_emmbeding_3]*emmbeding[3]
+    # _3dList_out = _3dList_out + [_3d_emmbeding_0]*emmbeding[0]+[_3d_emmbeding_1]*emmbeding[1]+[_3d_emmbeding_2]*emmbeding[2]+[_3d_emmbeding_3]*emmbeding[3]
+    # _2dList_out = _2dList_out + [_2d_sent_0]*sentType[0]+[_2d_sent_1]*sentType[1]
+    # _3dList_out = _3dList_out + [_3d_sent_0]*sentType[0]+[_3d_sent_1]*sentType[1]
+    # _2dList_out = _2dList_out + [_2d_pos_0]*posType[0]+[_2d_pos_1]*posType[1]
+    # _3dList_out = _3dList_out + [_3d_pos_0]*posType[0]+[_3d_pos_1]*posType[1]
+    # _2dList_out = _2dList_out + [_2d_len]*length+[_2d_pie_0,_2d_histogram_0,_2d_histogram_1,_2d_histogram_2,_2d_histogram_3,_2d_pie_1,_2d_line_0]*exp ##_2d_bar_0,_2d_bar_1,_2d_bar_2,
+    # _3dList_out = _3dList_out + [_3d_len]*length
     if "empty" not in _2d_test_0.keys() :
         _2dList_out = _2dList_out + [_2d_test_0]
     if "empty" not in _2d_test_1.keys() :
@@ -289,6 +331,36 @@ def getRenderLists(dimentions=[True,False],emmbeding=[False,False,False,False],s
         _2dList_out = _2dList_out + [_2d_test_3]
     if "empty" not in _2d_test_4.keys() :
         _2dList_out = _2dList_out + [_2d_test_4]
+    if "empty" not in _2d_test_5.keys() :
+        _2dList_out = _2dList_out + [_2d_test_5]
+    if "empty" not in _2d_test_6.keys() :
+        _2dList_out = _2dList_out + [_2d_test_6]
+    if "empty" not in _2d_test_7.keys() :
+        _2dList_out = _2dList_out + [_2d_test_7]
+    if "empty" not in _2d_test_8.keys() :
+        _2dList_out = _2dList_out + [_2d_test_8]
+    if "empty" not in _2d_test_9.keys() :
+        _2dList_out = _2dList_out + [_2d_test_9]
+    if "empty" not in _3d_test_0.keys() :
+        _3dList_out = _3dList_out + [_3d_test_0]
+    if "empty" not in _3d_test_1.keys() :
+        _3dList_out = _3dList_out + [_3d_test_1]
+    if "empty" not in _3d_test_2.keys() :
+        _3dList_out = _3dList_out + [_3d_test_2]
+    if "empty" not in _3d_test_3.keys() :
+        _3dList_out = _3dList_out + [_3d_test_3]
+    if "empty" not in _3d_test_4.keys() :
+        _3dList_out = _3dList_out + [_3d_test_4]
+    if "empty" not in _3d_test_5.keys() :
+        _3dList_out = _3dList_out + [_3d_test_5]
+    if "empty" not in _3d_test_6.keys() :
+        _3dList_out = _3dList_out + [_3d_test_6]
+    if "empty" not in _3d_test_7.keys() :
+        _3dList_out = _3dList_out + [_3d_test_7]
+    if "empty" not in _3d_test_8.keys() :
+        _3dList_out = _3dList_out + [_3d_test_8]
+    if "empty" not in _3d_test_9.keys() :
+        _3dList_out = _3dList_out + [_3d_test_9]
     # if length :
     #     _2dList_out = _2dList_out + [_2d_len]
     #     _3dList_out = _3dList_out + [_3d_len]
@@ -535,7 +607,7 @@ def selectAlgoDfList(df_main,n_components=2,norm_output=False,active_sel=[True,F
 # # print(df_main.shape)
 # #df_main2 = df_main.drop(["count","category"] ,axis= 1)
 
-# # df_main2 = df_main[["tb.pol_aju","tb.sub_aju","tb.pos_aju","vs.pos_aju","ts.pos_aju","al.pos_aju","vs.neu_aju","ts.neu_aju","vs.comp_aju","tb.pol_k_aju","tb.sub_k_aju","tb.polaj_aju","tb.pos_k_aju","vs.pos_k_aju","ts.pos_k_aju","al.pos_k_aju","vs.neu_k_aju","ts.neu_k_aju","vs.comp_k_aju"]]
+# # df_main2 = df_main[["tb.pol_aj","tb.sub_aj","tb.pos_aj","vs.pos_aj","ts.pos_aj","al.pos_aj","vs.neu_aj","ts.neu_aj","vs.comp_aj","tb.pol_k_aj","tb.sub_k_aj","tb.polaj_aj","tb.pos_k_aj","vs.pos_k_aj","ts.pos_k_aj","al.pos_k_aj","vs.neu_k_aj","ts.neu_k_aj","vs.comp_k_aj"]]
 # # plt_px = px.imshow(df_main2,y=df_main['category'].tolist(),color_continuous_scale='RdBu_r')#, zmin=[0.5,0.35,0.65,0.22],zmax=[0.54,0.42,0.78,0.34])
 # # plt_px.show(renderer="browser")
 
@@ -583,11 +655,16 @@ def getColorList(length,random_col=False,second_list=True):
         
 
     return color_list
-def displayCatStats(df,agg_col="category",filter_col=None,filter_value=None) :
+def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_value=None,display_col_bar = False) :
+    df = copy.deepcopy(df_input)
+    agg_col_origin = copy.deepcopy(agg_col_input)
+    agg_col = copy.deepcopy(agg_col_input)
     if type(filter_col)!=type(None) and type(filter_value)!=type(None) and filter_col in df.columns:
         df = df.loc[df[filter_col]==filter_value]
-        df.drop(filter_col, axis=1)
-    display_col_bar = False
+        df.drop([filter_col], axis=1)
+        if type(agg_col)==type([]) :
+            agg_col.remove(filter_col)
+            agg_col = str(agg_col[0])
     df[agg_col]=df[agg_col].astype(str, copy = False)
     count_col = "count_nlp"
     total_initial_entry = df[count_col].sum()
@@ -600,41 +677,71 @@ def displayCatStats(df,agg_col="category",filter_col=None,filter_value=None) :
     algo_list = ["tsne","pca","ipca"]
     col_list_nlp_name = ["Polarity","Subjectivity","Positivity (TB)","Positivity (VS)","Neutrality (VS)","Neutrality (TS)","Positivity (TS)","Positivity (AVG)"]
     col_list_nlp = ["tb.pol","tb.sub","tb.pos","vs.pos","vs.neu","ts.neu","ts.pos","al.pos"]
-    col_list_nlp_suff = []
+
     if display_col_bar :
         xticks=None
     else :
         xticks=""
     list_num = [x for x in range(0, entry_num)]
+    col_list_nlp_suff = []
+    col_list_nlp_suff_keyword = []
     for col in col_list_nlp :
         col_list_nlp_suff.append(col+suffix)
+        col_list_nlp_suff_keyword.append(col+"_k"+suffix)
     colors_all = getColorList(entry_num)#colors = ["red","green","blue","yellow","pink","cyan","orange","purple","gray"]
     colors =colors_all[:entry_num]
     colors2 =colors_all[entry_num:entry_num*2]
     df_cat = df.set_index(agg_col)
+    # print("agg_col_origin  ",agg_col_origin)
+    # print("agg_col  ",agg_col)
+    # display_df(df_cat)
     disp=1
     if disp==0 :
         fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(fig_size, fig_size),constrained_layout = True)
-        #gridspan = fig.add_gridspec(2, 2)
-        fig.suptitle('Statistics about '+agg_col+"   (n="+str(total_initial_entry)+")  (filter: "+str(filter_col)+"="+str(filter_value)+")", fontsize=70,horizontalalignment="center", verticalalignment="center")
+        ### Title
+        fig.suptitle('Statistics about '+str(agg_col_origin)+"   (n="+str(total_initial_entry)+")  (filter: "+str(filter_col)+"="+str(filter_value)+")", fontsize=70,horizontalalignment="center", verticalalignment="center")
+        ### NLP Stats
+        
         for i in range(len(col_list_nlp_suff)) :
             df_cat.plot.bar(y=col_list_nlp_suff[i],use_index=True,subplots=True,ax=ax[int(i/4),i%4], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=False,width=0.85,color=colors) #, figsize=(5, 5)  ,xticks=list_num
-            if suffix != "" :
-                df.plot.scatter(y=col_list_nlp_suff[i].replace(suffix,"_k"+suffix),x=agg_col,subplots=True,ax=ax[int(i/4),i%4], s = int(ball_size/2),c=colors2, legend=False,layout=(1, 1), fontsize= field_font_size, title="", ylabel="", xlabel="",xticks=xticks)#
-            else :
-                df.plot.scatter(y=col_list_nlp[i]+"_k",x=agg_col,subplots=True,ax=ax[int(i/4),i%4], s = int(ball_size/2),c=colors2, legend=False,layout=(1, 1), fontsize= field_font_size, title="", ylabel="", xlabel="",xticks=xticks)#,xticks=("")
+            df.plot.scatter(y=col_list_nlp_suff_keyword[i],x=agg_col,subplots=True,ax=ax[int(i/4),i%4], s = int(ball_size/2),c=colors2, legend=False,layout=(1, 1), fontsize= field_font_size, title="", ylabel="", xlabel="",xticks=xticks)#
             ax[int(i/4),i%4].set_title(col_list_nlp_name[i],pad=field_font_size, fontdict={'fontsize':title_font_size})
-        # for i in  range(len(algo_list)):
-        #     df.plot.scatter(x="0_"+algo_list[i]+suffix,y="1_"+algo_list[i]+suffix,subplots=True,ax=ax[2,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 2", title="",fontsize= field_font_size)
-        #     ax[2,i+1].set_title(algo_list[i].upper()+" (1-2)",pad=field_font_size, fontdict={'fontsize':title_font_size})
-        # for i in  range(len(algo_list)):
-        #     df.plot.scatter(x="0_"+algo_list[i]+suffix,y="2_"+algo_list[i]+suffix,subplots=True,ax=ax[3,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 3", title="",fontsize= field_font_size)
-        #     ax[3,i+1].set_title(algo_list[i].upper()+" (1-3)",pad=field_font_size, fontdict={'fontsize':title_font_size})
+        ### Embbeding Stats
+        for i in  range(len(algo_list)):
+            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="1_"+algo_list[i]+suffix,subplots=True,ax=ax[2,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 2", title="",fontsize= field_font_size)
+            ax[2,i+1].set_title(algo_list[i].upper()+" (1-2)",pad=field_font_size, fontdict={'fontsize':title_font_size})
+        for i in  range(len(algo_list)):
+            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="2_"+algo_list[i]+suffix,subplots=True,ax=ax[3,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 3", title="",fontsize= field_font_size)
+            ax[3,i+1].set_title(algo_list[i].upper()+" (1-3)",pad=field_font_size, fontdict={'fontsize':title_font_size})
+        ### Rest Stats
         df_cat.plot.barh(y="vs.comp"+suffix,use_index=True,subplots=True,ax=ax[2,0], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,color=colors,layout=(1,1),stacked=False,width=0.85)#,xticks=(0,1,2,3,4,5,6,7,8)) #, figsize=(5, 5)  
         ax[2,0].set_title("Compound",pad=field_font_size, fontdict={'fontsize':title_font_size})
         df_cat.plot.pie(y=count_col,use_index=True,subplots=True,ax=ax[3,0], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,colors=colors,layout=(1,1),stacked=False,autopct="%.2f%%", explode=[0.03]*entry_num)#,xticks=(0,1,2,3,4,5,6,7,8)) #, figsize=(5, 5)  
         ax[3,0].set_title("Number of Articles",pad=field_font_size, fontdict={'fontsize':title_font_size})
     elif disp==1:
+        size_one_graph = 5
+        fig, ax = plt.subplots(nrows=19, ncols=4, figsize=(int(4*size_one_graph*(entry_num/7)), 19*size_one_graph),constrained_layout = True)#
+        col_list=["tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","tb.char_pa","tb.char_ps","tb.pol_aj","tb.sub_aj","tb.pos_aj","tb.neg_aj","vs.pos_aj","vs.neu_aj","vs.neg_aj","vs.comp_aj","ts.pos_aj","ts.neu_aj","ts.neg_aj","al.pos_aj","al.neg_aj","tb.word_pa","tb.word_ps","tb.pol_k","tb.sub_k","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k","tb.noun_pa","tb.noun_ps","tb.pol_k_aj","tb.sub_k_aj","tb.pos_k_aj","tb.neg_k_aj","vs.pos_k_aj","vs.neu_k_aj","vs.neg_k_aj","vs.comp_k_aj","ts.neg_k_aj","ts.neu_k_aj","ts.pos_k_aj","al.pos_k_aj","al.neg_k_aj","tb.sent_pa","tb.char_pw"]
+        #list_name = [name[:3] for name in df_cat.index.tolist()] #xticks
+        df_cat["xticks"]=df_cat.index.str.slice(stop=4)
+        for x in range(4) :
+            for y in range(15) :
+                #print(df_cat[col_list[15*x+y]].min())
+                df_cat.plot.bar(y=col_list[15*x+y],use_index=True,subplots=True,ax=ax[y,x], legend=False, title="", xlabel="", ylabel="", fontsize= 10,stacked=False,width=0.85,color=colors,grid=True,rot=1)#,ylim=(0,1),color=colors) #, figsize=(5, 5)  ,xticks=list_num,xticks=xticks,xticks=tuple(list_name)
+                ax[y,x].set_title(col_list[15*x+y],pad=field_font_size, fontdict={'fontsize':30})
+                ax[y,x].set_xticklabels(df_cat.xticks)#df_cat.index, 
+        dim_red_x=["0_tsne","0_pca","0_ipca","0_tsne_aj","0_pca_aj","0_ipca_aj","0_tsne","0_pca","0_ipca","0_tsne_aj","0_pca_aj","0_ipca_aj"]
+        dim_red_y=["1_tsne","1_pca","1_ipca","1_tsne_aj","1_pca_aj","1_ipca_aj","2_tsne","2_pca","2_ipca","2_tsne_aj","2_pca_aj","2_ipca_aj"]
+        for x in range(4) :
+            for y in range(15,18) :
+                i=y-15
+                if display_col_bar :
+                    df.plot.line(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x],color="black", legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= 10,grid=True)
+                df.plot.scatter(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x], s = 150,c=colors, legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= 10,grid=True)
+                ax[y,x].set_title(dim_red_x[3*x+i]+" to "+dim_red_y[3*x+i][0:1],pad=field_font_size, fontdict={'fontsize':30})
+        text_kwargs = dict(ha='center', va='center', fontsize=10, color='C1')
+        ax[18,0].text(x=0, y=0, s="hello\nhello2", **text_kwargs)
+        ax[18,1].text(x=0.5, y=0.5,s="hello\nhello2", **text_kwargs)
         # fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(fig_size/4, fig_size),constrained_layout = True)
         # df_cat["vs.pos_new"]=df_cat["vs.pos"]/(df_cat["vs.pos"]+df_cat["vs.neg"])
         # df_cat["vs.neg_new"]=df_cat["vs.neg"]/(df_cat["vs.pos"]+df_cat["vs.neg"])
@@ -657,23 +764,23 @@ def displayCatStats(df,agg_col="category",filter_col=None,filter_value=None) :
         # # df_cat.plot.bar(y=["ts.pos_aj","ts.neg_aj"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"])
 
 
-        fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(fig_size/4, fig_size),constrained_layout = True)
-        df_cat["vs.pos_new"]=df_cat["vs.pos"]/(df_cat["vs.pos"]+df_cat["vs.neg"])
-        df_cat["ts.pos_new"]=df_cat["ts.pos"]/(df_cat["ts.pos"]+df_cat["ts.neg"])
-        df_cat["tb.pos_new"]=df_cat["tb.pos"]-(df_cat["tb.pos"].sum()/df_cat.shape[0])
-        df_cat["vs.pos_new"]=df_cat["vs.pos_new"]-(df_cat["vs.pos_new"].sum()/df_cat.shape[0])
-        df_cat["ts.pos_new"]=df_cat["ts.pos_new"]-(df_cat["ts.pos_new"].sum()/df_cat.shape[0])
-        print(0.5-df_cat["vs.pos_new"].sum()/df_cat.shape[0])
-        df_cat.plot.bar(y="tb.pos_new",use_index=True,ax=ax[0], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="gray",logy=True)
-        # df_cat.plot.bar(y=["vs.pos","vs.neu","vs.neg"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green",'orange',"red"])
-        # df_cat.plot.bar(y=["ts.pos","ts.neu","ts.neg"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green",'orange',"red"])
-        # df_cat.plot.bar(y=["vs.pos_new","vs.neg_new"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"],ylim=(0,0.1))
-        # df_cat.plot.bar(y=["ts.pos_new","ts.neg_new"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"],ylim=(0,0.1))
-        df_cat.plot.bar(y="vs.pos_new",use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="black")
-        df_cat.plot.bar(y="ts.pos_new",use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="black")
+        # fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(fig_size/4, fig_size),constrained_layout = True)
+        # df_cat["vs.pos_new"]=df_cat["vs.pos"]/(df_cat["vs.pos"]+df_cat["vs.neg"])
+        # df_cat["ts.pos_new"]=df_cat["ts.pos"]/(df_cat["ts.pos"]+df_cat["ts.neg"])
+        # df_cat["tb.pos_new"]=df_cat["tb.pos"]-(df_cat["tb.pos"].sum()/df_cat.shape[0])
+        # df_cat["vs.pos_new"]=df_cat["vs.pos_new"]-(df_cat["vs.pos_new"].sum()/df_cat.shape[0])
+        # df_cat["ts.pos_new"]=df_cat["ts.pos_new"]-(df_cat["ts.pos_new"].sum()/df_cat.shape[0])
+        # print(0.5-df_cat["vs.pos_new"].sum()/df_cat.shape[0])
+        # df_cat.plot.bar(y="tb.pos_new",use_index=True,ax=ax[0], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="gray",logy=True)
+        # # df_cat.plot.bar(y=["vs.pos","vs.neu","vs.neg"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green",'orange',"red"])
+        # # df_cat.plot.bar(y=["ts.pos","ts.neu","ts.neg"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green",'orange',"red"])
+        # # df_cat.plot.bar(y=["vs.pos_new","vs.neg_new"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"],ylim=(0,0.1))
+        # # df_cat.plot.bar(y=["ts.pos_new","ts.neg_new"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"],ylim=(0,0.1))
+        # df_cat.plot.bar(y="vs.pos_new",use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="black")
+        # df_cat.plot.bar(y="ts.pos_new",use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color="black")
 
-        # df_cat.plot.bar(y=["vs.pos_aj","vs.neg_aj"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"])
-        # df_cat.plot.bar(y=["ts.pos_aj","ts.neg_aj"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"])
+        # # df_cat.plot.bar(y=["vs.pos_aj","vs.neg_aj"],use_index=True,ax=ax[1], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"])
+        # # df_cat.plot.bar(y=["ts.pos_aj","ts.neg_aj"],use_index=True,ax=ax[2], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=True,width=0.95,color=["green","red"])
         pass
     plt.show()
     return fig
@@ -683,15 +790,38 @@ def lineTimeSent(df) :
     fig = px.line(df, x="year", y=col_list, title="Sorted Input", text="year", orientation="h",markers=True,line_shape ="spline",color="year") #,facet_row =["2010","2011","2012","2013","2014","2015","2016"]
     fig.show(renderer="browser")
 
-import main_var
-mv = main_var.main_var()
-graph_folder = "graphs/"
-agg_list = ["category","year","source_title"]#,["year","category"],["year","source_title"]]
-for agg in [agg_list[0]] :
-    df_main = openDFcsv(mv.visu_path,mv.visu_filename+"_"+agg)
-    fig = displayCatStats(df_main,agg)##
-    fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+agg+".png")
-#fig = displayCatStats(df_main,"year","category","ENTERTAINMENT")##
+# import main_var
+# mv = main_var.main_var()
+# graph_folder = "graphs/"
+# agg_list = ["category","year","source_title"]#,["year","category"],["year","source_title"]]
+# field_list = [False,True,False]#,True,True]#,["year","category"],["year","source_title"]]
+# count = 0
+# for agg in agg_list :
+#     df_main = openDFcsv(mv.visu_path,mv.visu_filename+"_"+str(agg))
+#     if type(agg)!=type([]) :
+#         fig = displayCatStats(df_main,agg,display_col_bar=field_list[count])##
+#         fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+agg+".png")
+#     else :
+#         filter_list = list(set(df_main[agg[1]].tolist()))
+#         print(filter_list)
+#         for filter_val in filter_list :
+#             fig = displayCatStats(df_main,agg,agg[1],filter_val,display_col_bar=field_list[count])##
+#             fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+str(agg)+"_"+str(filter_val)+".png")
+#     count = count +1
 
 #lineTimeSent(df_main)
 #figd.savefig(mv.visu_path+mv.visu_filename+"category"+".png")
+
+
+
+
+import main_var
+mv = main_var.main_var()
+from utils_art import *
+#df_main = openDFcsv(mv.visu_path,"visu_file_['year', 'source_title']")
+df_main = openDFcsv(mv.visu_path,"visu_file_['year_month', 'category']")
+graph_folder = "graphs/"
+_2dList_out, _3dList_out = getRenderLists()
+plt_2dList = renderAllOptions(df_main,_2dList_out)
+plt_3dList = renderAllOptions(df_main,_3dList_out)
+# savePlotList(plt_2dList,mv.visu_path+graph_folder,"2D_category_free")

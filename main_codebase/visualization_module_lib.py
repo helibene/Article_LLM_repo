@@ -743,7 +743,7 @@ def getColorList(length,random_col=False,second_list=True):
         
 
     return color_list
-def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_value=None,display_col_bar = False,disp=0) :
+def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_value=None,display_col_bar = False,disp=1) :
     df = copy.deepcopy(df_input)
     agg_col_origin = copy.deepcopy(agg_col_input)
     agg_col = copy.deepcopy(agg_col_input)
@@ -876,24 +876,24 @@ def lineTimeSent(df) :
     fig = px.line(df, x="year", y=col_list, title="Sorted Input", text="year", orientation="h",markers=True,line_shape ="spline",color="year") #,facet_row =["2010","2011","2012","2013","2014","2015","2016"]
     fig.show(renderer="browser")
 
-# import main_var
-# mv = main_var.main_var()
-# graph_folder = "graphs/"
-# agg_list = ["category","year","source_title"]#,["year","category"],["year","source_title"]]
-# field_list = [False,True,False]#,True,True]#,["year","category"],["year","source_title"]]
-# count = 0
-# for agg in agg_list :
-#     df_main = openDFcsv(mv.visu_path,mv.visu_filename+"_"+str(agg))
-#     if type(agg)!=type([]) :
-#         fig = displayCatStats(df_main,agg,display_col_bar=field_list[count])##
-#         fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+agg+".png")
-#     else :
-#         filter_list = list(set(df_main[agg[1]].tolist()))
-#         print(filter_list)
-#         for filter_val in filter_list :
-#             fig = displayCatStats(df_main,agg,agg[1],filter_val,display_col_bar=field_list[count])##
-#             fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+str(agg)+"_"+str(filter_val)+".png")
-#     count = count +1
+import main_var
+mv = main_var.main_var()
+graph_folder = "detail_2/"
+agg_list = ["category","year","source_title",["year","category"],["year","source_title"]]
+field_list = [False,True,False,True,True]#,["year","category"],["year","source_title"]]
+count = 0
+for agg in agg_list :
+    df_main = openDFcsv(mv.visu_path,mv.visu_filename+"_"+str(agg))
+    if type(agg)!=type([]) :
+        fig = displayCatStats(df_main,agg,display_col_bar=field_list[count])##
+        fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+agg+".png")
+    else :
+        filter_list = list(set(df_main[agg[1]].tolist()))
+        print(filter_list)
+        for filter_val in filter_list :
+            fig = displayCatStats(df_main,agg,agg[1],filter_val,display_col_bar=field_list[count])##
+            fig.savefig(mv.visu_path+graph_folder+mv.visu_filename+"_"+str(agg)+"_"+str(filter_val)+".png")
+    count = count +1
 
 #lineTimeSent(df_main)
 #figd.savefig(mv.visu_path+mv.visu_filename+"category"+".png")

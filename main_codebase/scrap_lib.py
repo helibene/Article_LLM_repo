@@ -16,7 +16,7 @@ from datetime import timedelta
 pd.set_option('expand_frame_repr', False)
 # import embedding_keyword_module_lib as ekml
 
-_TOPIC_LIST = ["TOP","WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"] #"CAAqJQgKIh9DQkFTRVFvSUwyMHZNR3QwTlRFU0JXVnVMVWRDS0FBUAE"
+_TOPIC_LIST = ["TOP","WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"] #"CAAqJQgKIh9DQkFTRVFvSUwyMHZNR3QwTlRFU0JXVnVMVWRDS0FBUAE" 
 _STANDARD_SCRAPPING_FIELDS = ["title","link", "published", "source_url", "source_title", "category", "year", "year_month","pk","url_list","url_TLD", "hash_key"]
 _MIN_SCRAPPING_FIELDS = ["hash_key","title", "category"]
 _ALL_SCRAPPING_FIELDS = ["hash_key","title","category","source_title","source_url","is_https","url_list","url_tld","published_date","published_date_str","published_date_int","published_time_raw","published_time_struct","published_year","published_year_month","link","guidislink","num_sub_article","num_links","language_title","language_summary","source_in_title","id"]

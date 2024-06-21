@@ -6,3 +6,5 @@ old_files/
 #Main Files
 main_files/
 api_key/
+main_codebase/.ipynb_checkpoints/
+main_codebase/__pycache__/

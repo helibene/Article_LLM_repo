@@ -6,7 +6,8 @@ Created on Sun Mar 24 16:08:04 2024
 """
 
 from utils_art import *
-
+import main_var
+mv = main_var.main_var()
 from sklearn.datasets import make_classification
 import pandas as pd
 import numpy as np
@@ -18,6 +19,9 @@ from random import randint
 import random
 import colorsys
 import copy
+from wordcloud import WordCloud, ImageColorGenerator, STOPWORDS
+from IPython.display import display, HTML
+from PIL import Image, ImageFont, ImageDraw, ImageOps
 # from dimension_reduc_lib import calculateStatsNLP
 # import matplotlib.cm as cm
 # import ipywidgets as widgets
@@ -41,7 +45,8 @@ DO_NOT_RENDER_PLOT=False
 np.random.seed(0)
 
 all_conf_dict = {'data_frame': None, 'color': None, 'height': None, 'width': None, 'template': None, 'title': None, 'labels': None, 'hover_name': None, 'hover_data': None, 'custom_data': None, 'color_discrete_sequence': None, 'color_discrete_map': None, 'x': None, 'y': None, 'log_x': None, 'log_y': None, 'range_x': None, 'range_y': None, 'error_x': None, 'error_x_minus': None, 'error_y': None, 'error_y_minus': None, 'facet_row': None, 'facet_col': None, 'facet_col_wrap': 0, 'facet_row_spacing': None, 'facet_col_spacing': None, 'symbol': None, 'size': None, 'text': None, 'animation_frame': None, 'animation_group': None, 'category_orders': None, 'orientation': None, 'color_continuous_scale': None, 'range_color': None, 'color_continuous_midpoint': None, 'symbol_sequence': None, 'symbol_map': None, 'opacity': None, 'size_max': None, 'marginal_x': None, 'marginal_y': None, "marginal": None, 'trendline': None, 'trendline_options': None, 'trendline_color_override': None, 'trendline_scope': None, 'render_mode': None, 'z': None, 'log_z': None, 'range_z': None, 'error_z': None, 'error_z_minus': None, 'names': None, 'values': None, 'hole': None, 'pattern_shape_sequence': None, 'pattern_shape_map': None, 'base': None, 'pattern_shape': None, 'barmode': None, 'text_auto': None, 'line_dash': None, 'line_group': None, 'line_dash_sequence': None, 'line_dash_map': None, 'line_close': None, 'line_shape': None, 'barnorm': None, 'markers': None, 'groupnorm': None, 'parents': None, 'path': None, 'ids': None, 'branchvalues': None, 'maxdepth': None, 'a': None, 'b': None, 'c': None, 'dimensions': None, 'browser':None, 'title': None, 'xtitle': None, 'ytitle': None, 'ztitle': None, 'histnorm':None, "histfunc": None, "cumulative": None, "nbins": 0, "direction": "clockwise", "start_angle": 90, "range_r": None, "range_theta": None, "log_r": None}
-
+_TOPIC_LIST = ["TOP"]#,"WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"]
+_FONT = ImageFont.truetype("FONTS/arial.ttf", 30)
 
 def dfNormalize(df) :
     return ((df - df.mean()) / df.std())
@@ -57,7 +62,81 @@ def generateTestSet() :
     )
     return X, y
 
+def calculateStatsNLP(df):
+    print("DF has",df.shape[0],"rows and",df.shape[1],"columns")
+    print("DF data is from",df["published"].min(),"to",df["published"].max()," (unique years:",df["year"].nunique()," unique months:",str(df["year_month"].nunique())+")")
+    print("DF has this number of unique sources:",df["source_title"].nunique())
+    col_list = ["tb.sent","tb.noun","tb.word","tb.char","tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","0_tsne","1_tsne","2_tsne","0_pca","1_pca","2_pca","0_ipca","1_ipca","2_ipca","word_count_f_t","word_count_f_k","word_count_s_t","word_count_s_k","word_count_all","word_count_all_sel","tb.pol_k","tb.sub_k","tb.polaj","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k"]
+    display(HTML(df[col_list].describe().to_html()))
+    createWordCloud(df,save_plots=True)
 
+def flattenStringList(mat):
+    out_list = ""
+    for li in mat :
+        out_list = out_list + li
+    return out_list
+
+def generateWordCloud(df,column,category="",year="",add_label="",display=True):
+    if category!="":
+        df=df[df["category"]==category] #'word_combined_all_sel'stopwords=stopwords, 
+    if year!="":
+        df=df[df["year"]==year]
+    text=df[column].values
+    text = flattenStringList(text)
+    list_word = text.split(" ")
+    word_list=getMostCommunKeywords(list_word, source_limit=20,return_word_list=True,display_stats=True)
+    for word in word_list:
+        text =  text.replace(" "+word+" ", " ")
+    title="Commun Words '"+str(column)+"' "+(" category: '"+str(category)+"' ")*(category!="")+(" year: '"+str(year)+"' ")*(year!="")+" ("+str(df.shape[0])+" entries) "+str(add_label)
+    wordcloud = WordCloud(background_color="white", max_words=10000,min_font_size=15, max_font_size= 150,  width=1000, height=1000,prefer_horizontal=1,scale=1.5,font_step=3,relative_scaling=0.3,repeat=True,min_word_length=3).generate_from_text(str(text))
+    img=ImageOps.expand(wordcloud.to_image(), border=40, fill=(255,255,255))
+    draw = ImageDraw.Draw(img)
+    draw.text((5, 5),title,(0,0,0),font=_FONT)
+    if display :
+        plt.figure(figsize=(20,20))
+        plt.imshow(img, interpolation='bilinear')
+        plt.axis("off")
+        plt.show()
+    return img
+
+def nlpFilter(df,index=0,volumepct=0.1):
+    top=True
+    col_list = ["tb.pol","tb.sub","tb.pos","vs.pos","ts.pos"]
+    col_list_label = ["Polarity","Subjectivity","Positivity (TB)","Positivity (VS)","Positivity (TS)"]
+    if index%2!=0:
+        top=False
+    col = col_list[int(index/2)%5]
+    col_label = col_list_label[int(index/2)%5]
+    size=df.shape[0]
+    df_out=df.sort_values(col,ascending=not top)[:int(size*volumepct)]
+    return df_out, str(str("Top"*top)+str("Bottom"*(not top))+" of '"+col_label+"' index  ("+str(volumepct*100)+"%)")
+
+def createWordCloud(df,display_plots=True,save_plots=True):
+    from visualization_module_lib import generateWordCloud
+    graph_folder=word_cloud_folder
+    _TOPIC_LIST = df["category"].unique()#["TOP","WORLD","NATION"]#,"BUSINESS","TECHNOLOGY","ENTERTAINMENT","SCIENCE","SPORTS","HEALTH"]
+    _YEAR_LIST = df["year"].unique()
+    for cat in _TOPIC_LIST:
+        out=generateWordCloud(df,"word_combined_all",category=cat,display=display_plots)
+        if save_plots :
+            out.save(mv.visu_path+graph_folder+mv.visu_filename+"_"+cat+".png","PNG")
+    for year in _YEAR_LIST:
+        out=generateWordCloud(df,"word_combined_all",year=year,display=display_plots)
+        if save_plots :
+            out.save(mv.visu_path+graph_folder+mv.visu_filename+"_"+str(year)+".png","PNG")
+    for i in range(10):
+        df_out,label = nlpFilter(df,i)
+        out=generateWordCloud(df_out,"word_combined_all",add_label=label,display=display_plots)
+        if save_plots :
+            out.save(mv.visu_path+graph_folder+mv.visu_filename+"_"+str(i)+".png")
+
+
+
+    
+def generateKeywordFrequency(df,column):
+    text = df[column].values
+    plt.figure(figsize=(20,20))
+    plot = text.plot.barh(y='count',use_index=True, legend=False, fontsize= 8, title="Volume month/year") #, figsize=(5, 5)
 ## Visualization using "plotly"
 
 # def renderAllOptions(df,BD=True,confList=[],label="") :
@@ -77,8 +156,8 @@ def renderAllOptions(df,confList=[]) :
     plt_list = []
     for conf in confList :
         main_conf = createdefconfdict()|conf
-        main_conf["data_frame"]=df
-        print(main_conf)
+        main_conf["data_frame"]=df.sort_values(by=['year_month'],ascending=True)
+        #print(main_conf)
         plt = plotWithConf(main_conf)
         plt_list.append(plt)
     return plt_list
@@ -197,8 +276,12 @@ def plotDFstatisticsQuerry(df, source_limit=50,onlyYear=False) :
 #             scatter.marker.size = s
 
 def getRenderLists(dimentions=[True,True],emmbeding=[False,False,False,False],sentType=[False,False],posType=[False,False],length=False,exp=True,browser=True) :
-
-    base = {"x":None,"y":None,"z":None,"c":None,"size":None,"hover_name":None,"custom_data":None, #"custom_data":None,
+    dimentions=[True,True]
+    emmbeding=[True,True,True,False]
+    sentType=[True,True]
+    posType=[True,True]
+    length=True
+    base = {"x":None,"y":None,"z":None,"c":None,"size":"tb.sent","hover_name":None,"custom_data":None, #"custom_data":None,
                     "browser":browser,"facet_row":None,"facet_col":None,"facet_row_spacing":None,"facet_col_spacing":None,
                     "log_x":False,"log_y":False,"log_z":False,"render_mode":PLOT_RENDER,"size_max":None,"opacity":None,"text_auto":True}
     _2d_test_0={"empty":True}
@@ -222,8 +305,8 @@ def getRenderLists(dimentions=[True,True],emmbeding=[False,False,False,False],se
     _3d_test_8={"empty":True}
     _3d_test_9={"empty":True}
     
-    std2dScatter = {"plot_type":"scatter","trendline":"ols","opacity":0.9,"size":"tb.char_ps"} #'ols', 'lowess', 'rolling', 'expanding' or 'ewm',"size":"tb.sent" ,"size":"count"
-    std3dScatter = {"plot_type":"scatter_3d","size":"tb.char_ps","opacity":0.9}
+    std2dScatter = {"plot_type":"scatter","trendline":"ols","opacity":0.9,"size":"tb.sent"} #'ols', 'lowess', 'rolling', 'expanding' or 'ewm',"size":"tb.sent" ,"size":"count"
+    std3dScatter = {"plot_type":"scatter_3d","size":"tb.sent","opacity":0.9}
     std2dPie = {"plot_type":"pie","opacity":0.9,"hole":0.2}#,"hover_name":"category"
     std2dBar = {"plot_type":"bar","opacity":0.9, "text_auto":True}
     std2dScatterPolar = {"plot_type":"scatter_polar"}
@@ -304,6 +387,9 @@ def getRenderLists(dimentions=[True,True],emmbeding=[False,False,False,False],se
     _2d_pos_1 = base|std2dScatter|{"x":"tb.pos_k","y":"vs.pos_k","color":"category","title":"Scatter plot of the positivity (TB & VS) of keywork data","xtitle":"Pos TextBlob","ytitle":"Pos Vader Sentiment","marginal_x":MARGINAL_LIST[3],"marginal_y":MARGINAL_LIST[4]}
     _3d_pos_1 = base|std3dScatter|{"x":"tb.pos_k","y":"vs.pos_k","z":"ts.pos_k","color":"category","title":"Scatter plot of the positivity (TB & VS & TS) of keywork data","xtitle":"Pos TextBlob","ytitle":"Pos Vader Sentiment","ztitle":"Pos Transformer"}
 
+    _2d_line_0 = base|std2dLine|{"x":"year_month","y":"tb.pol_aj","color":"category" ,"title":"line y = tb.pol_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    _2d_line_1 = base|std2dLine|{"x":"year_month","y":"tb.sub_aj","color":"category" ,"title":"line y = tb.sub_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
+    _2d_line_2 = base|std2dLine|{"x":"year_month","y":"al.pos_aj","color":"category" ,"title":"line y = al.pos_aj","xtitle":"time","ytitle":"volume","histnorm":'percent',"histfunc":'avg',"barmode":'group',"trendline":"ols","text":"category","trendline_scope":"overall"} ## "y":"tb.char" , histfunc='avg', marginal="rug" box`, `violin`  barmode 'group', 'overlay' or 'relative'  ,"nbins":1  cumulative True ,"animation_frame":"year","marginal":"rug" 
 
     
     _2d_len = base|std2dScatter|{"x":"tb.sent","y":"tb.noun","color":"category","title":"Scatter plot of text nature and volume data from articles","xtitle":"Number of Sentences","ytitle":"Number of Nouns"}
@@ -313,6 +399,8 @@ def getRenderLists(dimentions=[True,True],emmbeding=[False,False,False,False],se
     _3dList_out = [] 
     
     
+    _2dList_out = _2dList_out + [_2d_emmbeding_0]*emmbeding[0]+[_2d_emmbeding_1]*emmbeding[1]+[_2d_emmbeding_2]*emmbeding[2]+[_2d_emmbeding_3]*emmbeding[3]+ [_2d_sent_0]*sentType[0]+[_2d_sent_1]*sentType[1]+ [_2d_pos_0]*posType[0]+[_2d_pos_1]*posType[1]+ [_2d_len]*length+ [_2d_line_0,_2d_line_1,_2d_line_2]
+    _3dList_out = _3dList_out + [_3d_emmbeding_0]*emmbeding[0]+[_3d_emmbeding_1]*emmbeding[1]+[_3d_emmbeding_2]*emmbeding[2]+[_3d_emmbeding_3]*emmbeding[3]+ [_3d_sent_0]*sentType[0]+[_3d_sent_1]*sentType[1]+ [_3d_pos_0]*posType[0]+[_3d_pos_1]*posType[1]+ [_3d_len]*length
     # _2dList_out = _2dList_out + [_2d_emmbeding_0]*emmbeding[0]+[_2d_emmbeding_1]*emmbeding[1]+[_2d_emmbeding_2]*emmbeding[2]+[_2d_emmbeding_3]*emmbeding[3]
     # _3dList_out = _3dList_out + [_3d_emmbeding_0]*emmbeding[0]+[_3d_emmbeding_1]*emmbeding[1]+[_3d_emmbeding_2]*emmbeding[2]+[_3d_emmbeding_3]*emmbeding[3]
     # _2dList_out = _2dList_out + [_2d_sent_0]*sentType[0]+[_2d_sent_1]*sentType[1]
@@ -655,7 +743,7 @@ def getColorList(length,random_col=False,second_list=True):
         
 
     return color_list
-def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_value=None,display_col_bar = False) :
+def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_value=None,display_col_bar = False,disp=0) :
     df = copy.deepcopy(df_input)
     agg_col_origin = copy.deepcopy(agg_col_input)
     agg_col = copy.deepcopy(agg_col_input)
@@ -670,14 +758,13 @@ def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_val
     total_initial_entry = df[count_col].sum()
     entry_num = df.shape[0]
     fig_size = 60
-    ball_size = fig_size*35
-    title_font_size=fig_size
-    field_font_size = int(fig_size/2)
+    ball_size = fig_size*20
+    title_font_size=30
+    field_font_size = 12#int(title_font_size/2)
     suffix="_aj"#
     algo_list = ["tsne","pca","ipca"]
     col_list_nlp_name = ["Polarity","Subjectivity","Positivity (TB)","Positivity (VS)","Neutrality (VS)","Neutrality (TS)","Positivity (TS)","Positivity (AVG)"]
     col_list_nlp = ["tb.pol","tb.sub","tb.pos","vs.pos","vs.neu","ts.neu","ts.pos","al.pos"]
-
     if display_col_bar :
         xticks=None
     else :
@@ -692,43 +779,42 @@ def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_val
     colors =colors_all[:entry_num]
     colors2 =colors_all[entry_num:entry_num*2]
     df_cat = df.set_index(agg_col)
-    # print("agg_col_origin  ",agg_col_origin)
-    # print("agg_col  ",agg_col)
-    # display_df(df_cat)
-    disp=1
+    df_cat["xticks"]=[x.upper().replace("THE","").replace(" ","")[:4] for x in df_cat.index.str.slice(stop=10)]
+    df["xticks"]=[x.upper().replace("THE","").replace(" ","")[:4] for x in df[agg_col].str.slice(stop=10)]
+    size_one_graph = 5
     if disp==0 :
-        fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(fig_size, fig_size),constrained_layout = True)
-        ### Title
-        fig.suptitle('Statistics about '+str(agg_col_origin)+"   (n="+str(total_initial_entry)+")  (filter: "+str(filter_col)+"="+str(filter_value)+")", fontsize=70,horizontalalignment="center", verticalalignment="center")
-        ### NLP Stats
-        
+        fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(int(4*size_one_graph*(entry_num/7)), 4*size_one_graph), gridspec_kw={'wspace':0.07,"hspace":0.07},constrained_layout = True)#(fig_size, fig_size)
+        fig.suptitle('Statistics about '+str(agg_col_origin)+"   (n="+str(total_initial_entry)+")  (filter: "+str(filter_col)+"="+str(filter_value)+")", fontsize=title_font_size)#,y=0.96horizontalalignment="center", verticalalignment="center",
         for i in range(len(col_list_nlp_suff)) :
-            df_cat.plot.bar(y=col_list_nlp_suff[i],use_index=True,subplots=True,ax=ax[int(i/4),i%4], legend=False, title="", xlabel="", fontsize= field_font_size,layout=(1,1),stacked=False,width=0.85,color=colors) #, figsize=(5, 5)  ,xticks=list_num
-            df.plot.scatter(y=col_list_nlp_suff_keyword[i],x=agg_col,subplots=True,ax=ax[int(i/4),i%4], s = int(ball_size/2),c=colors2, legend=False,layout=(1, 1), fontsize= field_font_size, title="", ylabel="", xlabel="",xticks=xticks)#
+            df_cat.plot.bar(y=col_list_nlp_suff[i],use_index=True,subplots=True,ax=ax[int(i/4),i%4], legend=False, title="", xlabel="", fontsize= field_font_size,stacked=False,width=0.85,color=colors,grid=True,rot=1) #, figsize=(5, 5)  ,xticks=list_num,layout=(1,1)
+            df.plot.scatter(y=col_list_nlp_suff_keyword[i],x=agg_col,subplots=True,ax=ax[int(i/4),i%4], s = int(ball_size/2),c=colors2, legend=False,layout=(1, 1), fontsize= field_font_size, title="", ylabel="", xlabel="",grid=True,rot=1)#,xticks=xticks)#
             ax[int(i/4),i%4].set_title(col_list_nlp_name[i],pad=field_font_size, fontdict={'fontsize':title_font_size})
+            ax[int(i/4),i%4].set_xticklabels(df_cat.xticks)#df_cat.index, 
         ### Embbeding Stats
         for i in  range(len(algo_list)):
-            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="1_"+algo_list[i]+suffix,subplots=True,ax=ax[2,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 2", title="",fontsize= field_font_size)
+            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="1_"+algo_list[i]+suffix,subplots=True,ax=ax[2,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 2", title="",fontsize= field_font_size,grid=True,rot=1)
             ax[2,i+1].set_title(algo_list[i].upper()+" (1-2)",pad=field_font_size, fontdict={'fontsize':title_font_size})
         for i in  range(len(algo_list)):
-            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="2_"+algo_list[i]+suffix,subplots=True,ax=ax[3,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 3", title="",fontsize= field_font_size)
+            df.plot.scatter(x="0_"+algo_list[i]+suffix,y="2_"+algo_list[i]+suffix,subplots=True,ax=ax[3,i+1], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=algo_list[i].upper()+" 1", ylabel=algo_list[i].upper()+" 3", title="",fontsize= field_font_size,grid=True,rot=1)
             ax[3,i+1].set_title(algo_list[i].upper()+" (1-3)",pad=field_font_size, fontdict={'fontsize':title_font_size})
         ### Rest Stats
-        df_cat.plot.barh(y="vs.comp"+suffix,use_index=True,subplots=True,ax=ax[2,0], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,color=colors,layout=(1,1),stacked=False,width=0.85)#,xticks=(0,1,2,3,4,5,6,7,8)) #, figsize=(5, 5)  
+        df_cat.plot.bar(y="vs.comp"+suffix,use_index=True,subplots=True,ax=ax[2,0], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,color=colors,layout=(1,1),stacked=False,width=0.85,xticks=None)#,xticks=(0,1,2,3,4,5,6,7,8)) #, figsize=(5, 5)  
         ax[2,0].set_title("Compound",pad=field_font_size, fontdict={'fontsize':title_font_size})
+        ax[2,0].set_xticklabels(df_cat.xticks)
         df_cat.plot.pie(y=count_col,use_index=True,subplots=True,ax=ax[3,0], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,colors=colors,layout=(1,1),stacked=False,autopct="%.2f%%", explode=[0.03]*entry_num)#,xticks=(0,1,2,3,4,5,6,7,8)) #, figsize=(5, 5)  
         ax[3,0].set_title("Number of Articles",pad=field_font_size, fontdict={'fontsize':title_font_size})
     elif disp==1:
-        size_one_graph = 5
-        fig, ax = plt.subplots(nrows=19, ncols=4, figsize=(int(4*size_one_graph*(entry_num/7)), 19*size_one_graph),constrained_layout = True)#
-        col_list=["tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","tb.char_pa","tb.char_ps","tb.pol_aj","tb.sub_aj","tb.pos_aj","tb.neg_aj","vs.pos_aj","vs.neu_aj","vs.neg_aj","vs.comp_aj","ts.pos_aj","ts.neu_aj","ts.neg_aj","al.pos_aj","al.neg_aj","tb.word_pa","tb.word_ps","tb.pol_k","tb.sub_k","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k","tb.noun_pa","tb.noun_ps","tb.pol_k_aj","tb.sub_k_aj","tb.pos_k_aj","tb.neg_k_aj","vs.pos_k_aj","vs.neu_k_aj","vs.neg_k_aj","vs.comp_k_aj","ts.neg_k_aj","ts.neu_k_aj","ts.pos_k_aj","al.pos_k_aj","al.neg_k_aj","tb.sent_pa","tb.char_pw"]
+
+        fig, ax = plt.subplots(nrows=19, ncols=4, figsize=(int(4*size_one_graph*(entry_num/7)), 19*size_one_graph), gridspec_kw={'wspace':0.07,"hspace":0.07},constrained_layout = True)#
+        fig.suptitle('Statistics about '+str(agg_col_origin)+"   (n="+str(total_initial_entry)+")  (filter: "+str(filter_col)+"="+str(filter_value)+")", fontsize=title_font_size)#,y=0.96horizontalalignment="center", verticalalignment="center",
+        col_list=["tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","tb.char_pa","tb.char_ps","tb.pol_aj","tb.sub_aj","tb.pos_aj","tb.neg_aj","vs.pos_aj","vs.neu_aj","vs.neg_aj","vs.comp_aj","ts.pos_aj","ts.neu_aj","ts.neg_aj","al.pos_aj","al.neg_aj","tb.word_pa","tb.word_ps","tb.pol_k","tb.sub_k","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k","tb.noun_pa","tb.noun_ps","tb.pol_k_aj","tb.sub_k_aj","tb.pos_k_aj","tb.neg_k_aj","vs.pos_k_aj","vs.neu_k_aj","vs.neg_k_aj","vs.comp_k_aj","ts.neg_k_aj","ts.neu_k_aj","ts.pos_k_aj","al.pos_k_aj","al.neg_k_aj","tb.sent_pa","count_nlp"]#,"tb.char_pw"
         #list_name = [name[:3] for name in df_cat.index.tolist()] #xticks
-        df_cat["xticks"]=df_cat.index.str.slice(stop=4)
+        
         for x in range(4) :
             for y in range(15) :
                 #print(df_cat[col_list[15*x+y]].min())
-                df_cat.plot.bar(y=col_list[15*x+y],use_index=True,subplots=True,ax=ax[y,x], legend=False, title="", xlabel="", ylabel="", fontsize= 10,stacked=False,width=0.85,color=colors,grid=True,rot=1)#,ylim=(0,1),color=colors) #, figsize=(5, 5)  ,xticks=list_num,xticks=xticks,xticks=tuple(list_name)
-                ax[y,x].set_title(col_list[15*x+y],pad=field_font_size, fontdict={'fontsize':30})
+                df_cat.plot.bar(y=col_list[15*x+y],use_index=True,subplots=True,ax=ax[y,x], legend=False, title="", xlabel="", ylabel="", fontsize= field_font_size,stacked=False,width=0.85,color=colors,grid=True,rot=1)#,ylim=(0,1),color=colors) #, figsize=(5, 5)  ,xticks=list_num,xticks=xticks,xticks=tuple(list_name)
+                ax[y,x].set_title(col_list[15*x+y],pad=field_font_size, fontdict={'fontsize':title_font_size})
                 ax[y,x].set_xticklabels(df_cat.xticks)#df_cat.index, 
         dim_red_x=["0_tsne","0_pca","0_ipca","0_tsne_aj","0_pca_aj","0_ipca_aj","0_tsne","0_pca","0_ipca","0_tsne_aj","0_pca_aj","0_ipca_aj"]
         dim_red_y=["1_tsne","1_pca","1_ipca","1_tsne_aj","1_pca_aj","1_ipca_aj","2_tsne","2_pca","2_ipca","2_tsne_aj","2_pca_aj","2_ipca_aj"]
@@ -736,9 +822,9 @@ def displayCatStats(df_input,agg_col_input="category",filter_col=None,filter_val
             for y in range(15,18) :
                 i=y-15
                 if display_col_bar :
-                    df.plot.line(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x],color="black", legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= 10,grid=True)
-                df.plot.scatter(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x], s = 150,c=colors, legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= 10,grid=True)
-                ax[y,x].set_title(dim_red_x[3*x+i]+" to "+dim_red_y[3*x+i][0:1],pad=field_font_size, fontdict={'fontsize':30})
+                    df.plot.line(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x],color="black", legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= field_font_size,grid=True)
+                df.plot.scatter(x=dim_red_x[3*x+i],y=dim_red_y[3*x+i],subplots=True,ax=ax[y,x], s = ball_size,c=colors, legend=False,layout=(1, 1), xlabel=dim_red_x[3*x+i], ylabel=dim_red_y[3*x+i], title="",fontsize= field_font_size,grid=True)
+                ax[y,x].set_title(dim_red_x[3*x+i]+" to "+dim_red_y[3*x+i][0:1],pad=field_font_size, fontdict={'fontsize':title_font_size})
         text_kwargs = dict(ha='center', va='center', fontsize=10, color='C1')
         ax[18,0].text(x=0, y=0, s="hello\nhello2", **text_kwargs)
         ax[18,1].text(x=0.5, y=0.5,s="hello\nhello2", **text_kwargs)
@@ -815,13 +901,43 @@ def lineTimeSent(df) :
 
 
 
-import main_var
-mv = main_var.main_var()
-from utils_art import *
-#df_main = openDFcsv(mv.visu_path,"visu_file_['year', 'source_title']")
-df_main = openDFcsv(mv.visu_path,"visu_file_['year_month', 'category']")
-graph_folder = "graphs/"
-_2dList_out, _3dList_out = getRenderLists()
-plt_2dList = renderAllOptions(df_main,_2dList_out)
-plt_3dList = renderAllOptions(df_main,_3dList_out)
-# savePlotList(plt_2dList,mv.visu_path+graph_folder,"2D_category_free")
+# import main_var
+# mv = main_var.main_var()
+# from utils_art import *
+# from embedding_keyword_module_lib import *
+# word_cloud_folder="word_cloud/"
+# px_graph_folder = "px_plots/"
+# mat_graph_folder = "test/"
+# #df_main = openDFcsv(mv.visu_path,"visu_file_['year', 'source_title']")
+
+
+# # df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# # calculateStatsNLP(df_main)
+
+# # df_main = openDFcsv(mv.visu_path,"visu_file_['year_month', 'category']")
+# # _2dList_out, _3dList_out = getRenderLists(browser=False)
+# # plt_2dList = renderAllOptions(df_main,_2dList_out)
+# # plt_3dList = renderAllOptions(df_main,_3dList_out)
+# # savePlotList(plt_2dList,mv.visu_path+px_graph_folder,"2D_graphs")
+# # savePlotList(plt_3dList,mv.visu_path+px_graph_folder,"3D_graphs")
+
+# agg_list = ["category","year","source_title",["year","category"],["year","source_title"]]
+# field_list = [False,True,False,True,True]#,["year","category"],["year","source_title"]]
+# count = 0
+# for agg in agg_list :
+#     df_main = openDFcsv(mv.visu_path,mv.visu_filename+"_"+str(agg))
+#     for disp in [0,1]:
+#         fig = displayCatStats(df_main,agg,display_col_bar=field_list[count],disp=disp)##
+#         fig.savefig(mv.visu_path+mat_graph_folder+mv.visu_filename+"_"+agg+"_"+str(disp)+".png")
+
+# from embedding_keyword_module_lib import *
+# df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# #print(df_main["word_combined_all_sel"].mode())
+# for cat in _TOPIC_LIST:
+#     generateWordCloud(df_main,"word_combined_all",cat)
+#par_list = parse_keywords_list(df_main,"word_combined_all_sel",False)
+#print(par_list)
+#generateKeywordFrequency(df_main,)
+#"word_combined_all"
+#word_combined_all_sel
+

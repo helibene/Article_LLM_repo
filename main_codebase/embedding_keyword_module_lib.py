@@ -109,12 +109,16 @@ def flattenMatrix(mat):
 def getMostCommunKeywords(union_list_np, source_limit=10000,return_word_list=True,display_stats=True) :
     df = pd.DataFrame(union_list_np, columns=['keyword'])
     df = df['keyword'].value_counts().to_frame("count").sort_values(by=['count'],ascending=True)
-    # if display_stats :
-    #     display_df(df)
+    if display_stats :
+        display_df(df)
     count_sum_before = df["count"].sum()
     entry_sum_before = df.shape[0]
     source_limiy_count = int(df.iloc[[int(-min(entry_sum_before,source_limit))]]["count"].tolist()[0])
-    df = df[df['count'].between(source_limiy_count, source_limit)]
+    print("source_limiy_count",source_limiy_count)
+    #df = df[df['count'].between(source_limiy_count, source_limit)]
+    df = df[df['count'].between(source_limiy_count, 999999999999999999)]
+    if display_stats :
+        display_df(df)
     count_sum_after = df["count"].sum()
     entry_sum_after = df.shape[0]
     if display_stats :
@@ -235,3 +239,13 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500,add_nlp_stats=True,nlp
     return df
 
 print("IMPORT : embedding_keyword_module_lib")
+def flattenStringList(mat):
+    out_list = ""
+    for li in mat :
+        out_list = out_list + li
+    return out_list
+# df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# list_word = flattenStringList(df_main["word_combined_all"].values)
+# list_word = list_word.split(" ")
+# df=getMostCommunKeywords(list_word, source_limit=1000,return_word_list=True,display_stats=True)
+# display(df)

@@ -14,22 +14,22 @@ Created on Thu May  9 14:38:51 2024
 #unionFiles(main_folder,"join10",main_folder,file3,main_folder,"join20")
 
 
-from utils_art import select_articles, openDFcsv
-import pandas as pd
-main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_3_article_main/.main/"
-out=select_articles(main_folder)
-#out_df=pd.DataFrame(out, columns=["hash_key"])
-querry_path = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_1_query_main/.main/"
-df_querry = openDFcsv(querry_path,"query_file")
-df = df_querry[df_querry['hash_key'].isin(out)]
-print(df_querry)
-print(df)
-# df = df_querry.join(out_df, how="outter",on='hash_key', rsuffix='_e')
-# print(df.shape)
-#print(out)
-# saveStats()
-# df = generateDimReducedDF(n_components=3, norm_output=True, active_sel=[True,True,True,True])
+# from utils_art import select_articles, openDFcsv
+# import pandas as pd
+# main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_3_article_main/.main/"
+# out=select_articles(main_folder)
+# #out_df=pd.DataFrame(out, columns=["hash_key"])
+# querry_path = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_1_query_main/.main/"
+# df_querry = openDFcsv(querry_path,"query_file")
+# df = df_querry[df_querry['hash_key'].isin(out)]
+# print(df_querry)
 # print(df)
+# # df = df_querry.join(out_df, how="outter",on='hash_key', rsuffix='_e')
+# # print(df.shape)
+# #print(out)
+# # saveStats()
+# # df = generateDimReducedDF(n_components=3, norm_output=True, active_sel=[True,True,True,True])
+# # print(df)
 
 
 # import plotly.express as px

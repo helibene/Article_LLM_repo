@@ -7,7 +7,7 @@ Created on Thu Mar 21 19:25:29 2024
 import main_var
 mv = main_var.main_var()
 from newspaper import Article, ArticleException
-from utils_art import openDFcsv,saveDFcsv,deleteUnnamed,saveSTRtxt,display_df
+from utils_art import openDFcsv,saveDFcsv,deleteUnnamed,saveSTRtxt,display_df,openSTRtxt
 import hashlib
 import pandas as pd
 import text_analysis
@@ -229,5 +229,38 @@ def articleDictToFile(ar_dict, path) :  #requires pk & text
     else :
         print("ERROR : articleDictToFile could not find 'text' or 'hash_key' in the dict provided")
         return False
-    
+
+def calculateNLP(index_from=0,index_to=9999999999,step_pct=0.0001,save_steps=True,save_final=True):
+    #df = pd.DataFrame([], columns = stat_field)
+    df_input = openDFcsv(mv.scarp_path, mv.scarp_filename)
+    df_input = df_input[df_input["valid"]==True]
+    quant=0.1
+    before_len = df_input.shape[0]
+    df_input=clearPercentile(df_input,"text_len",quant)
+    after_len = df_input.shape[0]
+    index_to = min(index_to,after_len)
+    df_hash = df_input["hash_key"][index_from:index_to]
+    base_df = pd.DataFrame([], columns = list(df_input.columns))#.reset_index(drop=False)#.reset_index(inplace=True, drop=True)
+    count=0
+    for hash_key in df_hash :
+        text = openSTRtxt(mv.article_path, hash_key)
+        analysis_nlp_dict = ts.analyseArticle(str(text))
+        dict_entry = df_input[df_input["hash_key"]==hash_key].to_dict(orient='records')[0]
+        add_dict = dict_entry|analysis_nlp_dict
+        base_df=addDictToDF(base_df,add_dict)
+        if (count%int((index_to-index_from)*step_pct) == 0 or count==len(df_hash)) and save_steps :
+            base_df_temp = deleteUnnamed(base_df,"hash_key")
+            saveDFcsv(base_df_temp, mv.scarp_path, mv.scarp_filename+"_nlp_"+str(count)) # , mode="w"
+            print("Saved #"+str(count)+"  to "+str(index_to-index_from))
+        count=count+1
+    if save_final:
+        saveDFcsv(base_df, mv.scarp_path, mv.scarp_filename+"_nlp")
+
+def clearPercentile(df,col,quant=0.1):
+    df_pctl1 = int(df[[col]].quantile(quant,0).iloc[0].tolist())
+    df_pctl2 = int(df[[col]].quantile(1-quant,0).iloc[0].tolist())
+    df = df[df[col]>df_pctl1]
+    df = df[df[col]<df_pctl2]
+    return df
+#calculateNLP()
 print("IMPORT : pars_lib")

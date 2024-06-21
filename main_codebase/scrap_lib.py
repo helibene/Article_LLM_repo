@@ -20,10 +20,10 @@ _TOPIC_LIST = ["TOP","WORLD","NATION","BUSINESS","TECHNOLOGY","ENTERTAINMENT","S
 _STANDARD_SCRAPPING_FIELDS = ["title","link", "published", "source_url", "source_title", "category", "year", "year_month","pk","url_list","url_TLD", "hash_key"]
 _MIN_SCRAPPING_FIELDS = ["hash_key","title", "category"]
 _ALL_SCRAPPING_FIELDS = ["hash_key","title","category","source_title","source_url","is_https","url_list","url_tld","published_date","published_date_str","published_date_int","published_time_raw","published_time_struct","published_year","published_year_month","link","guidislink","num_sub_article","num_links","language_title","language_summary","source_in_title","id"]
-
+_STANDARD_SCRAPPING_FIELDS_VALUES = ["title","link", "published", "source_url", "source_title", "category", "year", "year_month","pk","url_list","url_TLD", "hash_key"]
 log_filename = "log"
-language = "en"
-country = "US"
+language = "fr"
+country = "FR"
 
 ################################## QUERRY TO GET ARTICLE LIST
 
@@ -191,8 +191,10 @@ def addToDFHeadlinesParamList(gn, topic_list=[0], date_list_1 = ['2015-01-01'], 
 def loop_scraping(number_topics=8, startDate='2010-01-01', endDate='2024-01-01', sampling_1=14, sampling_2=6, display=True,save_steps=True,save_final=True,feilds="s"): # feilds (s=standard) (m=min) (a=all)
     if feilds=="m" :
         _STANDARD_SCRAPPING_FIELDS=_MIN_SCRAPPING_FIELDS
-    if feilds=="a" :
+    elif feilds=="a" :
         _STANDARD_SCRAPPING_FIELDS=_ALL_SCRAPPING_FIELDS
+    else :
+        _STANDARD_SCRAPPING_FIELDS=_STANDARD_SCRAPPING_FIELDS_VALUES
     total_article_count = 0
     topic_list = list(range(0,number_topics))
     date_list_start, date_list_end = splitDateList(generateDateList(startDate=startDate, endDate=endDate,sampling=sampling_1))

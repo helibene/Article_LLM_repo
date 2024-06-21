@@ -63,7 +63,6 @@ def apply_completions(input_dict,display=False):
             {
                 "role": input_dict["i_role"],
                 "content": input_dict["i_content"],
-#                "name": input_dict["i_name"],
             }
         ],
         model=input_dict["i_model"],
@@ -403,5 +402,5 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
         df = deleteUnnamed(df,set_index_key)
         saveDFcsv(df, save_path, filename_save,True)
     return df
-mainGeneration(input_data="que",algo_type="img",step_pct=0.5,max_prompt=1)
+#mainGeneration(input_data="que",algo_type="img",step_pct=0.5,max_prompt=1)
 print("IMPORT : openai_module_lib")

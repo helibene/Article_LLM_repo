@@ -9,6 +9,7 @@ mv = main_var.main_var()
 import pandas as pd
 from utils_art import calculatePct, openDFcsv, deleteUnnamed, saveDFcsv, display_df
 
+
 def joinQuerryAndParse(save=True,remove_invalid=True,display=True,filtered_input_df=False, union_df=None) :
     rename_dict = {"title_q":"title_quer","title_p":"title_par","pk_q":"pk","hash_key_q":"hash_key"}
     del_col_list = ["pk_p","hash_key_p","publish_date"]
@@ -23,7 +24,7 @@ def joinQuerryAndParse(save=True,remove_invalid=True,display=True,filtered_input
     if display :
         print("PARSSING dataset loaded from ",mv.scarp_path)
         print("PARSSING dataset has entry length of :",df_p_len," ("+calculatePct(df_p_len,df_q_len)+"% of querry data)\n")
-    df_q.hash_key = df_q.hash_key.astype('str') 
+    df_q.hash_key = df_q.hash_key.astype('str')
     df_p.hash_key = df_p.hash_key.astype('str') 
     df = df_q.join(df_p, how="inner", lsuffix='_q', rsuffix='_p') #,on='hash_key'
     df = df.rename(columns=rename_dict)
@@ -88,3 +89,5 @@ def joinAllDF(save=True, display_stats=True,display_data=True, union_df=None) :
     return df
 
 print("IMPORT : agg_lib")
+# df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# calculateStatsNLP(df_main)

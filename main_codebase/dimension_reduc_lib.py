@@ -176,7 +176,7 @@ def limitSel(df,source_limit,groupping):
             df = df[df[groupping_str].isin(select_val_list)]
     return df
 
-def calculateStatsLength2(df,groupping,display_data=False,sort_by_groupping=True,flatten_index=False,limit_sel=15):
+def calculateStatsLength(df,groupping,display_data=False,sort_by_groupping=True,flatten_index=False,limit_sel=15):
     df = df[~df["tb.pol"].isnull()]
     cols = ["tb.char","tb.sent","tb.noun","tb.word"]
     df = limitSel(df,limit_sel,groupping)
@@ -193,7 +193,7 @@ def calculateStatsLength2(df,groupping,display_data=False,sort_by_groupping=True
         display_df(df_main)
     return df_main
 
-def calculateStatsNLP2(df,groupping,display_data=False,display_stats=True,out_raw=False,only_keyword_nlp=False,sort_by_groupping=True,flatten_index=False,limit_sel=15):
+def calculateStatsNLP(df,groupping,display_data=False,display_stats=True,out_raw=False,only_keyword_nlp=False,sort_by_groupping=True,flatten_index=False,limit_sel=15):
     nlp_col_list = ["tb.pol","tb.sub","tb.pos","tb.neg","vs.pos","vs.neu","vs.neg","vs.comp","ts.pos","ts.neu","ts.neg","al.pos","al.neg","tb.pol_k","tb.sub_k","tb.pos_k","tb.neg_k","vs.pos_k","vs.neu_k","vs.neg_k","vs.comp_k","ts.neg_k","ts.neu_k","ts.pos_k","al.pos_k","al.neg_k","0_tsne","1_tsne","2_tsne","0_pca","1_pca","2_pca","0_ipca","1_ipca","2_ipca","0_tnn","1_tnn","2_tnn"]
     nlp_col_list = columnListinDf(df,nlp_col_list)
     df = df[~df[nlp_col_list[0]].isnull()]
@@ -233,8 +233,8 @@ def getStatsFromCol(df, column) :
 def calculateStatsColList(df, column_list=[],display_df=True,display_stats=False,out_raw=False,save=True):# ,stat_type="nlp"
     df_list_out = []
     for col in column_list :
-        df_len = calculateStatsLength2(df,col,display_df)
-        df_nlp = calculateStatsNLP2(df,col,display_df,display_stats,out_raw)
+        df_len = calculateStatsLength(df,col,display_df)
+        df_nlp = calculateStatsNLP(df,col,display_df,display_stats,out_raw)
         df_stats = df_nlp.join(df_len, how="inner",on=col,lsuffix="_nlp",rsuffix='_len')
         df_stats["count_equal"] =np.where(df_stats['count_nlp'] ==df_stats['count_len'], True,False)#df_stats[df_stats["count_nlp"]==df_stats["count_len"]]
         df_list_out.append(df_stats)
@@ -258,10 +258,16 @@ def saveStats(col_list=[],length=True,NLP=True) :
         for col in col_list :
             saveDFcsv(df_list_npl[count],mv.join1_path,mv.join1_filename+"_nlp_"+str(col))
             count = count + 1
-            
-print("IMPORT : dimension_reduc ")
+
+def extractFromKey(df,charNum=1):
+    df["key_extract"] = df["hash_key"].str.slice(0,charNum)
+    return df
+
+# print("IMPORT : dimension_reduc ")
 
 # df_main = openDFcsv(mv.join2_path,mv.join2_filename)
+# display(extractFromKey(df_main)["key_extract"])
+
 # agg_list = ["category","year","source_title",["year","category"],["year","source_title"]]#,["year","category"],["year","source_title"]]
 # field_list = [False,True,False,True,True]#,["year","category"],["year","source_title"]]
 # df_list=calculateStatsColList(df_main,agg_list,display_df=True,display_stats=True,out_raw=False,save=True)

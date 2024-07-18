@@ -238,12 +238,13 @@ def mainKeywordWF(entry_limit=9999999,common_word_max=500,add_nlp_stats=True,nlp
         saveDFcsv(df, keyword_path, keyword_filename,True)
     return df
 
-print("IMPORT : embedding_keyword_module_lib")
 def flattenStringList(mat):
     out_list = ""
     for li in mat :
         out_list = out_list + li
     return out_list
+
+print("IMPORT : embedding_keyword_module_lib")
 # df_main = openDFcsv(mv.join2_path,mv.join2_filename)
 # list_word = flattenStringList(df_main["word_combined_all"].values)
 # list_word = list_word.split(" ")

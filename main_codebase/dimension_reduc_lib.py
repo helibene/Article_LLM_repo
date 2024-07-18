@@ -263,7 +263,7 @@ def extractFromKey(df,charNum=1):
     df["key_extract"] = df["hash_key"].str.slice(0,charNum)
     return df
 
-# print("IMPORT : dimension_reduc ")
+print("IMPORT : dimension_reduc")
 
 # df_main = openDFcsv(mv.join2_path,mv.join2_filename)
 # display(extractFromKey(df_main)["key_extract"])

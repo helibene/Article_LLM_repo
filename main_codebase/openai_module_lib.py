@@ -12,7 +12,7 @@ mv = main_var.main_var()
 from utils_art import openDFcsv,openSTRtxt,openDFxlsx,saveDFcsv,saveSTRtxt,openConfFile,cfn_index,cfn_field,getOpenAIKey
 import openai
 import os
-from os import *
+#from os import *
 from pathlib import Path
 from openai import OpenAI
 import tiktoken
@@ -22,13 +22,16 @@ from sklearn.manifold import TSNE
 import hashlib
 import pandas as pd
 from utils_art import deleteUnnamed,display_df
+import requests
+import shutil
+from PIL import Image 
 
 
 # Chat GPT
 openai.api_key = getOpenAIKey('C:/Users/User/OneDrive/Desktop/Article_LLM/api_key/','api_key')
 llm_client = OpenAI(api_key=openai.api_key)
 
-model_list_comp = ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k","gpt-4-0125-preview"]
+model_list_comp = ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k","gpt-3.5-turbo-instruct","gpt-4-0125-preview","gpt-4-turbo","gpt-4"]
 model_list_embd = ["text-embedding-3-small", "text-embedding-3-large","text-embedding-ada-002"]
 model_list_img = ["dall-e-2", "dall-e-3"]
 role_list = ["user","system", "assistant", "tool"]
@@ -42,6 +45,13 @@ max_token=100
 open_path = mv.article_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/1_3_article_main/arc/"
 save_path = mv.embdedding_path  # "C:/Users/User/OneDrive/Desktop/article/files_3/2_1_embdedding_main/embd_df/"
 filename_save = mv.embdedding_filename # "embd_out_main_test"
+embdedding_path = mv.embdedding_path
+embdedding_filename = mv.embdedding_filename
+completion_path = mv.completion_path
+completion_filename = mv.completion_filename
+image_path = mv.image_path
+image_filename = mv.image_filename
+
 
 
 fields_comp1 = ['o_id','i_content', 'o_content', 'i_role', 'i_model', 'i_temperature', 'i_token_max', 'i_n', 'i_seed', 'i_name', 'i_frequency_penalty', 'i_presence_penalty','o_system_fingerprint', 'o_logprobs', 'o_model', 'o_object', 'o_created', 'o_finish_reason', 'o_index', 'o_role', 'o_token_output', 'o_token_input', 'o_token_total', "valid"]
@@ -281,6 +291,8 @@ def getDataToQuerryListLLM(max_prompt=5,input_selection="art",promt_type="image"
         out_dict_List = loadListArticleHash(mv.article_path,filename_list)
     elif input_selection=="que" :
         prompt_list = cfn_field("prompts","prompt_type",promt_type,"prompt_value",max_prompt)
+        # print(promt_type)
+        # print(prompt_list)
         for prompt in prompt_list:
             hash_key = hashlib.shake_256(str(prompt).encode()).hexdigest(20)
             out_dict_List.append({"hash_key":hash_key,"text":prompt})
@@ -313,57 +325,70 @@ def addDictToDF(df=None, ar_dict={},selected_fields=[]):
         print("WARNING : df could not be added because the columns list is different")
     return df
 
-# def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembeddingFALSE=False,dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=1000,save_final=True,display_df_var=True,save_steps=True,step_pct=0.01):
-#     model_list = [0] # [0,1,2]
-#     temperature_list = [0.5] # [0,0.25,0.5,0.75,1]
-#     df=None
-#     set_index_key = "hash_key" #'o_created' #"hash_key"
-#     prompt_list = getDataToQuerryListLLM(max_prompt,articleTRUEquestionFALSE)
-#     # prompt_list = prompt_list[0:100]
-#     # prompt_list = cfn_field("prompts","prompt_type","content","prompt_value",max_prompt) #
-#     count = 0
-#     for prompt in prompt_list:
-#         for model_n in model_list:
-#             for temperature_n in temperature_list :
-#                 valid_dict = {"valid":"VALID"}
-#                 input_dict = {}
-#                 if completionTRUEembeddingFALSE :
-#                     input_dict = llmInputConfCompletion(prompt["text"],model_num=model_n,temperature=temperature_n,hash_key=prompt["hash_key"])
-#                     out_raw = apply_completions(input_dict)
-#                     out_dict = outputDictParseCompletion(out_raw)
-#                     selected_fields = selected_fields_comp
-#                 else :
-#                     num_tokens = num_tokens_from_string(prompt["text"])
-#                     if num_tokens > token_max_emb :
-#                         valid_dict = {"valid":"WARNING"}
-#                         prompt["text"] = prompt["text"][0:cara_max_emb]
-#                     print(" - #"+str(count),"- ",valid_dict,"-",num_tokens,"-",len(prompt["text"]),"-",prompt["hash_key"])
-#                     input_dict = llmInputConfEmbeddings(prompt["text"],dimensions=dimension,hash_key=prompt["hash_key"])
-#                     out_raw = apply_embeddings(input_dict)
-#                     out_dict = outputDictParseEmbeddings(out_raw)
-#                     selected_fields = selected_fields_emp
-#                 final_dict = input_dict | out_dict | valid_dict
-#                 df = addDictToDF(df,final_dict,selected_fields)
-#                 if (count%max(1,int(float(min(max_prompt,len(prompt_list)))*step_pct)) == 0  and count != 0) and save_steps:
-#                     df_int = deleteUnnamed(df,set_index_key)
-#                     saveDFcsv(df_int, save_path, filename_save+"_"+str(count),True)
-#                 count = count + 1
-#     if display_df_var :
-#         display_df(df.head(3))
-#     if save_final :
-#         df = deleteUnnamed(df,set_index_key)
-#         saveDFcsv(df, save_path, filename_save,True)
-#     return df
+def scrapImage(final_dict):
+    import urllib3
+    url = final_dict["o_url"]
+    file_name = str(str(save_path)+str("img")+str("/")+str(final_dict["hash_key"])+"xxx"+str(".png"))
+    data = requests.get(url).content 
+    f = open(file_name,'wb') 
+    f.write(data) 
+    f.close() 
+    # res = requests.get(url, stream = True)
+    # urllib3.urlretrieve(url, file_name)
+    # print(type(res.status_code))
+    # if res.status_code == 200:
+    #     print("lol")
+    #     print(res.raw)
+    #     print(type(res.raw))
+    #     #print(res.json())
+    #     # print(res.data)
+    #     # print(res.content)
 
 
-def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=1000,save_final=True,save_steps=True,display_df_var=True,display_steps=True,step_pct=0.01):
-    #input_data : "art" Article, "que" Preset Questions
+    #     with open(file_name,'wb') as f:
+            
+    #         shutil.copyfileobj(res.raw, f)
+    #         pass
+    # else :
+    #     final_dict["valid"] = "ERROR"
+    #     print("Could not download image '"+final_dict["hash_key"]+"' (error code :"+str(res.status_code)+")")
+    return final_dict
+
+def getAlgoTypeVars(algo_type="emb"):
+    selected_fields = []
+    selected_save_path = ""
+    selected_save_file = ""
+    if algo_type=="cmp" :
+        selected_fields = selected_fields_comp
+        selected_save_path = completion_path
+        selected_save_file = completion_filename
+    elif algo_type=="emb":
+        selected_fields = selected_fields_emp
+        selected_save_path = embdedding_path
+        selected_save_file = embdedding_filename
+    elif algo_type=="img":
+        selected_fields = selected_fields_img
+        selected_save_path = image_path
+        selected_save_file = image_filename
+    else:
+        print("ERROR could not find mentioned Algorithm Type to find save path : ",algo_type)
+    return selected_fields, selected_save_path, selected_save_file
+def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=1000,save_final=True,save_steps=True,display_df_var=False,display_steps=True,step_pct=0.01):
+    #input_data : "art" Article, "que" Preset Questions, "img" Image
     #algo_type : "emb" Embeddings, "cmp" Completion, "img" Image Genereation
     df=None
     temperature=0.5
     max_tokens=300
     set_index_key = "hash_key" #'o_created' #"hash_key"
-    prompt_list = getDataToQuerryListLLM(max_prompt,input_data)
+    promt_type=""
+    if input_data == "que" :
+        promt_type = "image"#"content"
+    if input_data == "art" :
+        promt_type = "instructions"
+    elif input_data == "img" :
+        promt_type = "image"
+    prompt_list = getDataToQuerryListLLM(max_prompt,input_data,promt_type)
+    #print(prompt_list)
     count = 0
     for prompt in prompt_list:
         valid_dict = {"valid":"VALID"}
@@ -381,7 +406,7 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
             selected_fields = selected_fields_emp
         
         elif algo_type=="img":
-            input_dict = llmInputConfImage(prompt["text"],model_num=model_num_img,hash_key=prompt["hash_key"])
+            input_dict = llmInputConfImage(prompt["text"],model_num=model_num_img,hash_key=prompt["hash_key"],quality="hd",size="1024x1024")
             out_raw = apply_image_gen(input_dict)
             out_dict = outputDictParseImages(out_raw)
             selected_fields = selected_fields_img
@@ -389,18 +414,22 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
             print("ERROR could not find mentioned Algorithm Type : ",algo_type)
             valid_dict = {"valid":"ERROR"}
         final_dict = input_dict | out_dict | valid_dict
+        if algo_type=="img":
+            final_dict = scrapImage(final_dict)
         if display_steps :
             print(" - #"+str(count),"- ",valid_dict,"-",len(prompt["text"]),"-",prompt["hash_key"])
+        selected_fields, selected_save_path, selected_save_file = getAlgoTypeVars(algo_type)
         df = addDictToDF(df,final_dict,selected_fields)
         if (count%max(1,int(float(min(max_prompt,len(prompt_list)))*step_pct)) == 0  and count != 0) and save_steps:
             df_int = deleteUnnamed(df,set_index_key)
-            saveDFcsv(df_int, save_path, filename_save+"_"+str(count),True)
+            saveDFcsv(df_int, selected_save_path, selected_save_file+"_"+str(count),True)
         count = count + 1
     if display_df_var :
         display_df(df.head(3))
     if save_final :
         df = deleteUnnamed(df,set_index_key)
-        saveDFcsv(df, save_path, filename_save,True)
+        saveDFcsv(df, selected_save_path, selected_save_file,True)
     return df
-#mainGeneration(input_data="que",algo_type="img",step_pct=0.5,max_prompt=1)
+mainGeneration(input_data="que",algo_type="img",step_pct=1,max_prompt=20)
+#scrapImage({"hash_key":"test"})
 print("IMPORT : openai_module_lib")

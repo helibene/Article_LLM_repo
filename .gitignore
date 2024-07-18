@@ -8,5 +8,6 @@ main_files/
 api_key/
 main_codebase/.ipynb_checkpoints/
 main_codebase/__pycache__/
-main_codebase/__pycache__/main_var.cpython-311.pyc
+main_codebase/__pycache__/*.pyc
 main_codebase/*.ipynb
+jupyter/

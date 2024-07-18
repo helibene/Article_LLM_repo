@@ -5,6 +5,7 @@ Created on Thu May  9 14:38:51 2024
 @author: Alexandre
 """
 
+############################## Union Scrap files
 # from utils_art import unionFiles
 # main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_2_scarp_main/.main/temp3_not_del/"
 # file1="input1"
@@ -14,6 +15,7 @@ Created on Thu May  9 14:38:51 2024
 #unionFiles(main_folder,"join10",main_folder,file3,main_folder,"join20")
 
 
+############################## Select Donloaded articles by size 
 # from utils_art import select_articles, openDFcsv
 # import pandas as pd
 # main_folder = "C:/Users/User/OneDrive/Desktop/Article_LLM/main_files/1_3_article_main/.main/"
@@ -31,10 +33,7 @@ Created on Thu May  9 14:38:51 2024
 # # df = generateDimReducedDF(n_components=3, norm_output=True, active_sel=[True,True,True,True])
 # # print(df)
 
-
-# import plotly.express as px
-# import pandas as pd
-
+############################## Generate LEN/NLP extract for Viz
 # import main_var
 # mv = main_var.main_var()
 # from dimension_reduc_lib import calculateStatsNLP2,calculateStatsLength2
@@ -47,12 +46,9 @@ Created on Thu May  9 14:38:51 2024
 #     df_stats = df_nlp.join(df_len, how="inner",on=agg,lsuffix="_nlp",rsuffix='_len')
 #     saveDFcsv(df_stats,mv.visu_path,mv.visu_filename+"_"+str(agg))
 
-#df_stats = calculateStatsNLP2(df_main,["year","category"])#year_month
-#df_stats = calculateStatsNLP2(df_main,"source_title")#year_month
-# print(list(df_stats.columns))
-# df_len = calculateStatsLength2(df_main,["year","category"])
-#df_stats = df_stats.reset_index()
-#saveDFcsv(df_stats,mv.visu_path,mv.visu_filename+"_test_new_12")
+
+
+
 
 
 
@@ -95,4 +91,13 @@ Created on Thu May  9 14:38:51 2024
 # print(df.min()["product"])
 # print(df.max())
 
-# print("lol"*(not False))
+# print("lol"*(not False))*
+
+
+
+#df_stats = calculateStatsNLP2(df_main,["year","category"])#year_month
+#df_stats = calculateStatsNLP2(df_main,"source_title")#year_month
+# print(list(df_stats.columns))
+# df_len = calculateStatsLength2(df_main,["year","category"])
+#df_stats = df_stats.reset_index()
+#saveDFcsv(df_stats,mv.visu_path,mv.visu_filename+"_test_new_12")

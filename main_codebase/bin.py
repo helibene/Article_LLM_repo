@@ -601,6 +601,48 @@ Created on Sat Mar 30 00:05:32 2024
 #     final_prompt = str(llm_prompt)+str(context_prompt)+article_text
 #     return llmInputConf(final_prompt)
 
+# def mainGeneration(articleTRUEquestionFALSE=True,completionTRUEembeddingFALSE=False,dimension=10,max_prompt=1000000,token_max_emb=7500,cara_max_emb=1000,save_final=True,display_df_var=True,save_steps=True,step_pct=0.01):
+#     model_list = [0] # [0,1,2]
+#     temperature_list = [0.5] # [0,0.25,0.5,0.75,1]
+#     df=None
+#     set_index_key = "hash_key" #'o_created' #"hash_key"
+#     prompt_list = getDataToQuerryListLLM(max_prompt,articleTRUEquestionFALSE)
+#     # prompt_list = prompt_list[0:100]
+#     # prompt_list = cfn_field("prompts","prompt_type","content","prompt_value",max_prompt) #
+#     count = 0
+#     for prompt in prompt_list:
+#         for model_n in model_list:
+#             for temperature_n in temperature_list :
+#                 valid_dict = {"valid":"VALID"}
+#                 input_dict = {}
+#                 if completionTRUEembeddingFALSE :
+#                     input_dict = llmInputConfCompletion(prompt["text"],model_num=model_n,temperature=temperature_n,hash_key=prompt["hash_key"])
+#                     out_raw = apply_completions(input_dict)
+#                     out_dict = outputDictParseCompletion(out_raw)
+#                     selected_fields = selected_fields_comp
+#                 else :
+#                     num_tokens = num_tokens_from_string(prompt["text"])
+#                     if num_tokens > token_max_emb :
+#                         valid_dict = {"valid":"WARNING"}
+#                         prompt["text"] = prompt["text"][0:cara_max_emb]
+#                     print(" - #"+str(count),"- ",valid_dict,"-",num_tokens,"-",len(prompt["text"]),"-",prompt["hash_key"])
+#                     input_dict = llmInputConfEmbeddings(prompt["text"],dimensions=dimension,hash_key=prompt["hash_key"])
+#                     out_raw = apply_embeddings(input_dict)
+#                     out_dict = outputDictParseEmbeddings(out_raw)
+#                     selected_fields = selected_fields_emp
+#                 final_dict = input_dict | out_dict | valid_dict
+#                 df = addDictToDF(df,final_dict,selected_fields)
+#                 if (count%max(1,int(float(min(max_prompt,len(prompt_list)))*step_pct)) == 0  and count != 0) and save_steps:
+#                     df_int = deleteUnnamed(df,set_index_key)
+#                     saveDFcsv(df_int, save_path, filename_save+"_"+str(count),True)
+#                 count = count + 1
+#     if display_df_var :
+#         display_df(df.head(3))
+#     if save_final :
+#         df = deleteUnnamed(df,set_index_key)
+#         saveDFcsv(df, save_path, filename_save,True)
+#     return df
+
 
 """TEXT_ANALYSIS"""
             

@@ -105,6 +105,7 @@ def readStatsFromURL(url, saveArticle=False, display=False,increment=0,add_nlp=1
     if display_hashpk_for_debug :
         print(" - START - Read article online and get text and keyword into dict #"+str(increment)+"  ("+str(hash_key)+")")
     ar_dict = urlToDict(url)
+    print(ar_dict)
     if display_hashpk_for_debug :
         print(" - DONE - Read article online and get text and keyword into dict  #"+str(increment)+"  ("+str(hash_key)+")")
     display_text = " - Loadind Article #"+str(increment)+"  '"+str(hash_key)+"' ("

@@ -31,12 +31,12 @@ from PIL import Image
 openai.api_key = getOpenAIKey('C:/Users/User/OneDrive/Desktop/Article_LLM/api_key/','api_key')
 llm_client = OpenAI(api_key=openai.api_key)
 
-model_list_comp = ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k","gpt-3.5-turbo-instruct","gpt-4-0125-preview","gpt-4-turbo","gpt-4"]
+model_list_comp = ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k","gpt-3.5-turbo-instruct","gpt-4-0125-preview","gpt-4-turbo","gpt-4","gpt-4o"]
 model_list_embd = ["text-embedding-3-small", "text-embedding-3-large","text-embedding-ada-002"]
 model_list_img = ["dall-e-2", "dall-e-3"]
 role_list = ["user","system", "assistant", "tool"]
 user_list = ["u1","u2","u3"]
-model_num_comp=0
+model_num_comp=6
 model_num_embd=0
 model_num_img=1
 role_num=0
@@ -135,7 +135,7 @@ def llmInputConfEmbeddings(content,user_num=0, model_num=0, encoding_format="flo
             "i_dimensions":dimensions,
             "hash_key":hash_key}
 
-def llmInputConfImage(prompt="A photograph of a white Siamese cat.", model_num=0,user_num=0, size="1792x1024", quality="hd",number=1, response_format="url",style='vivid',hash_key=None) : # vivid  natural standard
+def llmInputConfImage(prompt="A photograph of a white Siamese cat.", model_num=0,user_num=0, size="1792x1024", quality="hd",number=1, response_format="url",style='natural',hash_key=None) : # vivid  natural standard
     return {"i_prompt":prompt,
             "i_model":model_list_img[model_num],
             "i_size":size,
@@ -382,7 +382,7 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
     set_index_key = "hash_key" #'o_created' #"hash_key"
     promt_type=""
     if input_data == "que" :
-        promt_type = "image"#"content"
+        promt_type = "content"#"image"#
     if input_data == "art" :
         promt_type = "instructions"
     elif input_data == "img" :
@@ -397,19 +397,16 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
             input_dict = llmInputConfCompletion(prompt["text"],model_num=model_num_comp,temperature=temperature,max_tokens=max_tokens,hash_key=prompt["hash_key"])
             out_raw = apply_completions(input_dict)
             out_dict = outputDictParseCompletion(out_raw)
-            selected_fields = selected_fields_comp
         elif algo_type=="emb":
             prompt["text"],valid_dict=embdApplyMaxToken(prompt["text"], token_max_emb, valid_dict)
             input_dict = llmInputConfEmbeddings(prompt["text"],model_num=model_num_embd,dimensions=dimension,hash_key=prompt["hash_key"])
             out_raw = apply_embeddings(input_dict)
             out_dict = outputDictParseEmbeddings(out_raw)
-            selected_fields = selected_fields_emp
         
         elif algo_type=="img":
             input_dict = llmInputConfImage(prompt["text"],model_num=model_num_img,hash_key=prompt["hash_key"],quality="hd",size="1024x1024")
             out_raw = apply_image_gen(input_dict)
             out_dict = outputDictParseImages(out_raw)
-            selected_fields = selected_fields_img
         else:
             print("ERROR could not find mentioned Algorithm Type : ",algo_type)
             valid_dict = {"valid":"ERROR"}
@@ -430,6 +427,6 @@ def mainGeneration(input_data="art",algo_type="emb",dimension=10,max_prompt=1000
         df = deleteUnnamed(df,set_index_key)
         saveDFcsv(df, selected_save_path, selected_save_file,True)
     return df
-mainGeneration(input_data="que",algo_type="img",step_pct=1,max_prompt=20)
+mainGeneration(input_data="que",algo_type="cmp",step_pct=0.1,max_prompt=100)
 #scrapImage({"hash_key":"test"})
 print("IMPORT : openai_module_lib")
